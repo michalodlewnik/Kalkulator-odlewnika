@@ -21,7 +21,7 @@ st.markdown("""
     /* 4. NAPIS "MATERIAŁY POMOCNICZE" (h3) */
     h3 { 
         font-size: 30px !important; 
-        color: #FFA500 !important; /* Pomarańczowy */
+        color: white!important; /* Pomarańczowy */
         padding-top: 10px;
     }
 
@@ -106,6 +106,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
