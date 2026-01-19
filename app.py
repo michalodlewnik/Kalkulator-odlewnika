@@ -54,7 +54,7 @@ if nowa_kadz:
 
 # 5. EDYTOWALNY TOPSEED I KUBEK (z domyślnym wyliczeniem)
 st.divider()
-st.subheader("Materiały pomocnicze (można edytować):")
+st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
@@ -86,4 +86,5 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
