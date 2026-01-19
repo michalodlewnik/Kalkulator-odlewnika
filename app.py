@@ -30,7 +30,7 @@ siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, form
 nowa_kadz = st.checkbox("🔥 NOWA KADŹ (+10%)")
 
 # 4. LOGIKA I TWOJA NOWA FORMUŁA
-uzysk = 0.626 # Stała dobrana, aby wynik dla 1100kg był idealny (14.87kg)
+uzysk = 0.6 # Stała dobrana, aby wynik dla 1100kg był idealny (14.87kg)
 mg_sklad = zaprawy_db[wybrana]["Mg"]
 si_sklad = zaprawy_db[wybrana]["Si"]
 
@@ -60,3 +60,4 @@ with c1:
 with c2:
     st.metric("Mod. do kubka", f"{kubek:.1f} kg")
     st.metric("Temp. Spustu", f"{temp} °C")
+
