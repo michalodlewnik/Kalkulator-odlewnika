@@ -3,7 +3,7 @@ import streamlit as st
 st.markdown("""
     <style>
     /* 1. Usunięcie marginesów na górze - delikatnie zostawione 0.5rem żeby nie uciekło */
-    .block-container { padding-top: 0.5rem !important; }
+    .block-container { padding-top: 1rem !important; }
     
     /* 2. Styl ogólny tekstu */
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
@@ -106,6 +106,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
