@@ -5,7 +5,7 @@ st.markdown("""
     <style>
     /* Usunięcie marginesów na górze */
     .block-container { padding-top: 1rem !important; }
-    html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; color: orange !important;}
+    html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600;}
     .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
     
     /* Zielone tło dla głównego wyniku */
