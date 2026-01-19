@@ -5,7 +5,7 @@ st.markdown("""
     <style>
     /* Usunięcie marginesów na górze */
     .block-container { padding-top: 1rem !important; }
-    html, body, [class*="st-"] { font-size: 22px !important; font-weight: 600; }
+    html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; color: orange !important;}
     .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
     
     /* Zielone tło dla głównego wyniku */
@@ -86,3 +86,4 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
