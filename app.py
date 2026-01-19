@@ -3,19 +3,39 @@ import streamlit as st
 # 1. STYLE CSS - PODCIĄGNIĘCIE DO GÓRY I INTERFEJS
 st.markdown("""
     <style>
-    /* Usunięcie marginesów na górze */
-    .block-container { padding-top: 1rem !important; }
-    html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600;}
+    /* 1. Usunięcie marginesów na górze */
+    .block-container { padding-top: 0rem !important; }
+    
+    /* 2. Styl ogólny tekstu */
+    html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
+
+    /* 3. WIELKI ŻÓŁTY TYTUŁ (h1) */
+    h1 { 
+        font-size: 50px !important; 
+        color: oragne !important; 
+        text-align: center; 
+        padding-top: 0px !important;
+        margin-top: 0px !important;
+    }
+
+    /* 4. NAPIS "MATERIAŁY POMOCNICZE" (h3) */
+    h3 { 
+        font-size: 30px !important; 
+        color: #FFA500 !important; /* Pomarańczowy */
+        padding-top: 10px;
+    }
+
+    /* 5. Styl pól do wpisywania liczb */
     .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
     
-    /* Zielone tło dla głównego wyniku */
+    /* 6. Zielone tło dla głównego wyniku */
     .result-box { 
         background-color: #28a745; color: white; padding: 20px; 
         border-radius: 15px; text-align: center; margin-bottom: 20px;
     }
     .result-val { font-size: 55px !important; font-weight: 800; }
     
-    /* Ciemne tło dla sekcji Si */
+    /* 7. Ciemne tło dla sekcji Si */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 12px; text-align: center;
@@ -86,5 +106,6 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
