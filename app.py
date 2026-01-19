@@ -1,27 +1,27 @@
 import streamlit as st
 
-# 1. STYLE CSS - PODCIĄGNIĘCIE DO GÓRY I INTERFEJS
 st.markdown("""
     <style>
-    /* 1. Usunięcie marginesów na górze */
-    .block-container { padding-top: 0rem !important; }
+    /* 1. Usunięcie marginesów na górze - delikatnie zostawione 0.5rem żeby nie uciekło */
+    .block-container { padding-top: 0.5rem !important; }
     
     /* 2. Styl ogólny tekstu */
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
 
-    /* 3. WIELKI ŻÓŁTY TYTUŁ (h1) */
+    /* 3. WIELKI POMARAŃCZOWY TYTUŁ (h1) */
     h1 { 
         font-size: 50px !important; 
-        color: oragne !important; 
+        color: orange !important; /* Poprawiona literówka z oragne */
         text-align: center; 
-        padding-top: 0px !important;
+        padding-top: 5px !important;
         margin-top: 0px !important;
+        display: block !important;
     }
 
     /* 4. NAPIS "MATERIAŁY POMOCNICZE" (h3) */
     h3 { 
         font-size: 30px !important; 
-        color: white!important; /* Pomarańczowy */
+        color: white !important;
         padding-top: 10px;
     }
 
@@ -106,6 +106,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
