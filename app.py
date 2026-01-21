@@ -56,7 +56,7 @@ zaprawy_db = {
 
 # 3. WEJŚCIE DANYCH
 masa = st.number_input("Ilość metalu w kadzi [Kg]:", value=1100, step=5)
-temp = st.number_input("Temperatura spustu [oC]:", value=1470, step=10)
+temp = st.number_input("Temperatura spustu [oC]:", value=1480, step=10)
 target_mg = st.number_input("Magnez końcowy [%]:", value=0.045, step=0.005, format="%.3f")
 siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, format="%.3f")
 wybrana = st.selectbox("Wybierz zaprawę:", list(zaprawy_db.keys()))
@@ -96,7 +96,7 @@ total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
 st.markdown(f"""
     <div class="result-box">
         <div style="font-size: 25px;">ILOŚĆ ZAPRAWY</div>
-        <div class="result-val">{ilosc_zaprawy:.2f} kg</div>
+        <div class="result-val">{ilosc_zaprawy:.1f} kg</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -106,6 +106,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
