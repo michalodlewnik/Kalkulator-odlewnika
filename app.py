@@ -1,25 +1,25 @@
 import streamlit as st
 
-# 1. STYLE CSS - TWOJA DOPRACOWANA STRUKTURA
+# 1. STYLE CSS - TWOJE SPRAWDZONE USTAWIENIA
 st.markdown("""
     <style>
-    /* Usunięcie marginesów na samej górze strony */
-    .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important; }
+    /* Twoje marginesy */
+    .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
     
-    /* ZMNIEJSZENIE PRZERW MIĘDZY WIERSZAMI */
+    /* Ściskanie wierszy wg Twojego wzoru */
     div[data-testid="stVerticalBlock"] > div {
         margin-top: -7px !important;
         padding-top: 0px !important;
     }
 
-    /* ZMNIEJSZENIE ODSTĘPÓW POD TYTUŁAMI h1 i h3 */
+    /* Odstępy pod tytułami */
     h1 { margin-bottom: 0px !important; padding-bottom: 15px !important; }
-    h3 { margin-bottom: 0px !important; padding-bottom: 10px !important; }
+    h3 { margin-bottom: 0px !important; padding-bottom: 25px !important; }
         
     /* Styl ogólny tekstu */
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
 
-    /* WIELKI POMARAŃCZOWY TYTUŁ (h1) */
+    /* Wielki pomarańczowy tytuł */
     h1 { 
         font-size: 50px !important; 
         color: orange !important; 
@@ -29,44 +29,40 @@ st.markdown("""
         display: block !important;
     }
 
-    /* NAPIS "MATERIAŁY POMOCNICZE" (h3) */
+    /* Napis Materiały pomocnicze */
     h3 { 
         font-size: 30px !important; 
         color: white !important;
         padding-top: 10px;
     }
 
-    /* Styl pól do wpisywania liczb */
+    /* Pola liczbowe */
     .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
     
-    /* Zielone tło dla głównego wyniku */
+    /* Zielone tło wyniku */
     .result-box { 
         background-color: #28a745; color: white; padding: 15px; 
-        border-radius: 15px; text-align: center; margin-bottom: 10px;
+        border-radius: 15px; text-align: center; margin-bottom: 20px;
     }
     .result-val { font-size: 50px !important; font-weight: 800; }
     
-    /* Ciemne tło dla sekcji Si */
+    /* Ciemne tło Si */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 12px; text-align: center;
     }
 
-    /* Styl dla przycisku Reset */
+    /* Styl przycisku na dole */
     .stButton > button {
         width: 100%; height: 50px; background-color: #ff4b4b; color: white;
         font-size: 18px; font-weight: bold; border-radius: 10px; border: none;
-        margin-top: 10px;
+        margin-top: 20px;
     }
 
-    /* Zmniejszenie odległości pomiędzy sekcjami */
+    /* Twoje ustawienie linii hr */
     hr { margin-top: 0px !important; margin-bottom: 0px !important; }
     </style>
     """, unsafe_allow_html=True)
-
-# --- LOGIKA STANU (Session State - zapamiętywanie masy) ---
-if 'last_masa' not in st.session_state:
-    st.session_state['last_masa'] = 1100.0
 
 st.title("⚖️ Kalkulator zaprawy 1.0")
 
@@ -87,22 +83,7 @@ siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, form
 wybrana = st.selectbox("Wybierz zaprawę:", list(zaprawy_db.keys()))
 nowa_kadz = st.checkbox("🔥 NOWA KADŹ (+10%)")
 
-# Obliczenia sugerowane wg Twojego Excela
-proporcja = masa / 1100
-domyslny_topseed = round((8.8 * proporcja) * 2) / 2
-domyslny_kubek = round((4.0 * proporcja) * 2) / 2
-
-# RESET JEŚLI MASA SIĘ ZMIENIŁA
-if masa != st.session_state['last_masa']:
-    st.session_state['topseed_val'] = domyslny_topseed
-    st.session_state['kubek_val'] = domyslny_kubek
-    st.session_state['last_masa'] = masa
-
-# Inicjalizacja pól w pamięci
-if 'topseed_val' not in st.session_state: st.session_state['topseed_val'] = domyslny_topseed
-if 'kubek_val' not in st.session_state: st.session_state['kubek_val'] = domyslny_kubek
-
-# 4. OBLICZENIA GŁÓWNE (ZAPRAWA)
+# 4. OBLICZENIA GŁÓWNE
 uzysk = 60.0 
 mg_sklad = zaprawy_db[wybrana]["Mg"]
 si_sklad_zap = zaprawy_db[wybrana]["Si"]
@@ -112,16 +93,40 @@ ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 1
 if nowa_kadz:
     ilosc_zaprawy *= 1.1
 
-# 5. MATERIAŁY POMOCNICZE (Edytowalne z pamięcią)
+# 5. MATERIAŁY POMOCNICZE
 st.divider()
-st.subheader("Materiały pomocnicze (można edytować):")
+st.subheader("Obliczone materiały pomocnicze (można edytować):")
+
+proporcja = masa / 1100
+domyslny_topseed = round((8.8 * proporcja) * 2) / 2
+domyslny_kubek = round((4.0 * proporcja) * 2) / 2
 
 col_mod1, col_mod2 = st.columns(2)
 with col_mod1:
-    topseed_kg = st.number_input("Topseed [Kg]:", key='topseed_val', step=0.5)
+    topseed_kg = st.number_input("Topseed [Kg]:", value=domyslny_topseed, step=0.5)
 with col_mod2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", key='kubek_val', step=0.5)
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=domyslny_kubek, step=0.5)
 
-# Przycisk ręcznego resetu
-if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI"):
-    st.session_state['topseed_val'] = domyslny_
+# 6. PRZYROST Si
+si_z_zaprawy = (ilosc_zaprawy * si_sklad_zap) / masa * 100
+si_z_topseed = (topseed_kg * 0.485) / masa * 100
+si_z_kubka = (kubek_kg * 0.7496) / masa * 100
+total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
+
+# 7. WYNIKI KOŃCOWE
+st.markdown(f"""
+    <div class="result-box">
+        <div style="font-size: 25px;">ILOŚĆ ZAPRAWY</div>
+        <div class="result-val">{ilosc_zaprawy:.1f} kg</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown(f"""
+    <div class="si-box">
+        <div style="color: white; font-size: 20px;">PRZEWIDYWANY PRZYROST Si Z CAŁEGO ZABIEGU:</div>
+        <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# 8. PRZYCISK NA SAMYM SPODZIE (na razie bez funkcji)
+st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI")
