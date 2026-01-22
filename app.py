@@ -64,7 +64,7 @@ st.markdown("""
     /* 11. ROZCIĄGNIĘTY ŻÓŁTY PRZYCISK RESETU */
     div.stButton > button {
         width: 100% !important;
-        height: 60px !important;
+        height: 100px !important;
         background-color: #FFD700 !important;
         color: black !important;
         font-size: 22px !important;
@@ -155,3 +155,4 @@ if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI"):
     st.session_state['topseed_val'] = domyslny_topseed
     st.session_state['kubek_val'] = domyslny_kubek
     st.rerun()
+
