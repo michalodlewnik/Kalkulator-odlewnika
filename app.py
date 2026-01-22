@@ -51,6 +51,12 @@ st.markdown("""
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 12px; text-align: center;
     }
+
+    /* 10. Zmiejszenie odległości pomiędzy sekcjami */
+    hr {
+    margin-top: -20px !important;
+    margin-bottom: -10px !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -117,6 +123,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
