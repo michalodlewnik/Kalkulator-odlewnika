@@ -16,19 +16,22 @@ st.markdown("""
     h1 { font-size: 50px !important; color: orange !important; text-align: center; margin-bottom: 0px !important; padding-bottom: 15px !important; }
     h3 { font-size: 30px !important; color: white !important; margin-bottom: 0px !important; padding-bottom: 10px !important; padding-top: 10px; }
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
-    .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
-    .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
-    .result-val { font-size: 50px !important; font-weight: 800; }
-    .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
-    hr { margin-top: 0px !important; margin-bottom: 0px !important; }
+    
+    /* Styl suwaków */
+    .stSlider [data-baseweb="slider"] { margin-bottom: 25px; }
 
+    /* ŻÓŁTY PRZYCISK */
     div.stButton > button {
         width: 100% !important; height: 60px !important; background-color: #FFD700 !important; color: black !important;
         font-size: 22px !important; font-weight: bold !important; border-radius: 15px !important;
         border: none !important; margin-top: 10px !important; transition: all 0.2s ease;
     }
     div.stButton > button:hover { background-color: #FFC400 !important; transform: scale(1.01); }
-    div.stButton > button:active { transform: scale(0.98); background-color: #E6B800 !important; }
+    
+    .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
+    .result-val { font-size: 50px !important; font-weight: 800; }
+    .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
+    hr { margin-top: 0px !important; margin-bottom: 0px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -51,55 +54,46 @@ siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, form
 wybrana = st.selectbox("Wybierz zaprawę:", list(zaprawy_db.keys()))
 nowa_kadz = st.checkbox("🔥 NOWA KADŹ (+10%)")
 
-# --- 5. LOGIKA RESETU PRZY ZMIANIE MASY ---
+# --- 5. LOGIKA RESETU MASY ---
 proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
 domyslny_kubek = round((4.0 * proporcja) * 2) / 2
+
+# Przycięcie domyślnych wartości do zakresu suwaków, żeby nie wywaliło błędu
+domyslny_topseed = max(4.0, min(12.0, domyslny_topseed))
+domyslny_kubek = max(1.0, min(6.0, domyslny_kubek))
 
 if masa != st.session_state.last_masa:
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
     st.session_state.last_masa = masa
-    st.rerun()
 
-# --- 6. OBLICZENIA METALURGICZNE ---
+# --- 6. OBLICZENIA ZAPRAWY ---
 uzysk = 60.0 
 mg_sklad = zaprawy_db[wybrana]["Mg"]
 si_sklad_zap = zaprawy_db[wybrana]["Si"]
-
 komponent_mg = (target_mg + 0.76 * (siarka - 0.01) + 0.007)
 ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 100
 if nowa_kadz: ilosc_zaprawy *= 1.1
 
-# --- 7. MATERIAŁY POMOCNICZE (Rozwiązanie problemu "drugiego kliknięcia") ---
+# --- 7. MATERIAŁY POMOCNICZE (SUWAKI) ---
 st.divider()
-st.subheader("Obliczone materiały pomocnicze (można edytować):")
+st.subheader("Materiały pomocnicze (suwaki):")
 
-col1, col2 = st.columns(2)
+# Wyświetlamy suwaki z aktualnymi wartościami z sesji
+topseed_kg = st.slider("Topseed [Kg]:", 4.0, 12.0, value=st.session_state.topseed_val, step=0.5)
+st.session_state.topseed_val = topseed_kg
 
-with col1:
-    # Pobieramy wartość z sesji do zmiennej lokalnej
-    val_t = st.session_state.topseed_val
-    topseed_kg = st.number_input("Topseed [Kg]:", value=val_t, step=0.5)
-    # AKTUALIZUJEMY SESJĘ TYLKO JEŚLI WARTOŚĆ RZECZYWIŚCIE SIĘ ZMIENIŁA
-    if topseed_kg != st.session_state.topseed_val:
-        st.session_state.topseed_val = topseed_kg
-        st.rerun()
+kubek_kg = st.slider("Modyfikacja do kubka [Kg]:", 1.0, 6.0, value=st.session_state.kubek_val, step=0.5)
+st.session_state.kubek_val = kubek_kg
 
-with col2:
-    val_k = st.session_state.kubek_val
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=val_k, step=0.5)
-    if kubek_kg != st.session_state.kubek_val:
-        st.session_state.kubek_val = kubek_kg
-        st.rerun()
-
-# --- 8. ŻÓŁTY PRZYCISK RESETU (Błyskawiczny) ---
+# --- 8. ŻÓŁTY PRZYCISK RESETU ---
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
     st.rerun()
 
-# --- 9. OBLICZENIA KRZEMU I WYNIKI ---
+# --- 9. WYNIKI ---
 si_z_zaprawy = (ilosc_zaprawy * si_sklad_zap) / masa * 100
 si_z_topseed = (topseed_kg * 0.485) / masa * 100
 si_z_kubka = (kubek_kg * 0.7496) / masa * 100
