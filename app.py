@@ -2,8 +2,7 @@ import streamlit as st
 
 st.markdown("""
     <style>
-    /* 1. Usunięcie marginesów na samej górze strony */
-    .block-container { padding-top: 0rem !important; padding-bottom: 0rem !important; }
+
     
     /* 2. ZMNIEJSZENIE PRZERW MIĘDZY WIERSZAMI */
     div[data-testid="stVerticalBlock"] > div {
@@ -116,6 +115,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
