@@ -13,8 +13,8 @@ st.markdown("""
     }
 
     /* 3. ZMNIEJSZENIE ODSTĘPÓW POD TYTUŁAMI h1 i h3 */
-    h1 { margin-bottom: 0px !important; padding-bottom: 7,5px !important; }
-    h3 { margin-bottom: 0px !important; padding-bottom: 10px !important; }
+    h1 { margin-bottom: 0px !important; padding-bottom: 10px !important; }
+    h3 { margin-bottom: 0px !important; padding-bottom: 15px !important; }
        
     /* 4. Styl ogólny tekstu */
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
@@ -117,6 +117,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
