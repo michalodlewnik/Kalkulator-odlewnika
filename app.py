@@ -63,8 +63,7 @@ st.markdown("""
 
     /* 11. ROZCIĄGNIĘTY ŻÓŁTY PRZYCISK RESETU */
     div.stButton > button {
-        
-        height: 100px !important;
+       height: 60px !important;
         background-color: #FFD700 !important;
         color: black !important;
         font-size: 22px !important;
@@ -150,11 +149,12 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# 8. PRZYCISK RESETU NA SPODZIE
-if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI"):
+# 8. PRZYCISK RESETU NA SPODZIE - Z AUTOMATEM SZEROKOŚCI
+if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
     st.session_state['topseed_val'] = domyslny_topseed
     st.session_state['kubek_val'] = domyslny_kubek
     st.rerun()
+
 
 
 
