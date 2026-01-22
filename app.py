@@ -1,12 +1,12 @@
 import streamlit as st
 
-# 1. STYLE CSS - TWOJE SPRAWDZONE USTAWIENIA
+# 1. STYLE CSS - TWOJE SPRAWDZONE USTAWIENIA + ŻÓŁTY PRZYCISK
 st.markdown("""
     <style>
     /* Twoje marginesy */
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
     
-    /* Ściskanie wierszy wg Twojego wzoru */
+    /* Ściskanie wierszy */
     div[data-testid="stVerticalBlock"] > div {
         margin-top: -7px !important;
         padding-top: 0px !important;
@@ -42,21 +42,27 @@ st.markdown("""
     /* Zielone tło wyniku */
     .result-box { 
         background-color: #28a745; color: white; padding: 15px; 
-        border-radius: 15px; text-align: center; margin-bottom: 20px;
+        border-radius: 15px; text-align: center; margin-bottom: 10px;
     }
     .result-val { font-size: 50px !important; font-weight: 800; }
     
     /* Ciemne tło Si */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
-        border-radius: 12px; text-align: center;
+        border-radius: 12px; text-align: center; margin-bottom: 10px;
     }
 
-    /* Styl przycisku na dole */
+    /* ŻÓŁTY PRZYCISK NA PEŁNĄ SZEROKOŚĆ */
     .stButton > button {
-        width: 100%; height: 50px; background-color: #ff4b4b; color: white;
-        font-size: 18px; font-weight: bold; border-radius: 10px; border: none;
-        margin-top: 20px;
+        width: 100% !important; 
+        height: 60px !important; 
+        background-color: #FFD700 !important; /* Gold / Yellow */
+        color: black !important; /* Czarny napis dla kontrastu */
+        font-size: 22px !important; 
+        font-weight: bold !important; 
+        border-radius: 15px !important; 
+        border: none !important;
+        margin-top: 10px !important;
     }
 
     /* Twoje ustawienie linii hr */
@@ -128,5 +134,5 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# 8. PRZYCISK NA SAMYM SPODZIE (na razie bez funkcji)
+# 8. ŻÓŁTY PRZYCISK NA SPODZIE
 st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI")
