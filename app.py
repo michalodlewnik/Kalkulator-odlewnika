@@ -61,9 +61,9 @@ st.markdown("""
         margin-bottom: 0px !important;
     }
 
-    /* 11. ROZCIĄGNIĘTY ŻÓŁTY PRZYCISK RESETU */
+   /* 11. ŻÓŁTY PRZYCISK RESETU - Z EFEKTAMI */
     div.stButton > button {
-       height: 60px !important;
+        height: 60px !important;
         background-color: #FFD700 !important;
         color: black !important;
         font-size: 22px !important;
@@ -71,6 +71,21 @@ st.markdown("""
         border-radius: 15px !important;
         border: none !important;
         margin-top: 10px !important;
+        transition: all 0.2s ease; /* Płynne przejście efektów */
+    }
+
+    /* Efekt po najechaniu (lub przytrzymaniu palcem) */
+    div.stButton > button:hover {
+        background-color: #FFC400 !important; /* Ciemniejszy żółty */
+        transform: scale(1.01); /* Delikatne powiększenie */
+    }
+
+    /* Efekt w momencie kliknięcia - "Wciśnięcie" */
+    div.stButton > button:active {
+        transform: scale(0.98); /* Przycisk się lekko kurczy */
+        background-color: #E6B800 !important;
+        box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3) !important;
+    }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -149,7 +164,7 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# 8. PRZYCISK RESETU NA SPODZIE - Z AUTOMATEM SZEROKOŚCI
+# 8. PRZYCISK RESETU NA SPODZIE
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
     st.session_state['topseed_val'] = domyslny_topseed
     st.session_state['kubek_val'] = domyslny_kubek
