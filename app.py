@@ -1,13 +1,29 @@
 import streamlit as st
 
-# 1. LOGIKA PAMIĘCI (Session State)
-# Musi być na początku, aby resetowanie działało bezbłędnie
-if 'topseed_val' not in st.session_state:
-    st.session_state.topseed_val = 8.5
-if 'kubek_val' not in st.session_state:
-    st.session_state.kubek_val = 4.0
-if 'last_masa' not in st.session_state:
-    st.session_state.last_masa = 1100.0
+# --- LOGIKA SYNCHRONIZACJI (Wklej to nad polami Topseed/Kubek) ---
+
+# 1. Inicjalizacja pamięci przy pierwszym uruchomieniu
+if 'topseed_manual' not in st.session_state:
+    st.session_state.topseed_manual = round((8.8 * (masa/1100)) * 2) / 2
+if 'kubek_manual' not in st.session_state:
+    st.session_state.kubek_manual = round((4.0 * (masa/1100)) * 2) / 2
+if 'last_masa_val' not in st.session_state:
+    st.session_state.last_masa_val = masa
+
+# 2. Jeśli masa się zmieniła - przelicz wzór i zaktualizuj pola
+if masa != st.session_state.last_masa_val:
+    st.session_state.topseed_manual = round((8.8 * (masa/1100)) * 2) / 2
+    st.session_state.kubek_manual = round((4.0 * (masa/1100)) * 2) / 2
+    st.session_state.last_masa_val = masa
+
+# 3. POLA WEJŚCIOWE (używamy st.session_state jako źródła prawdy)
+col1, col2 = st.columns(2)
+with col1:
+    topseed_kg = st.number_input("Topseed [Kg]:", value=st.session_state.topseed_manual, step=0.5)
+    st.session_state.topseed_manual = topseed_kg # Zapamiętaj ręczną zmianę
+with col2:
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=st.session_state.kubek_manual, step=0.5)
+    st.session_state.kubek_manual = kubek_kg # Zapamiętaj ręczną zmianę
 
 # 2. STYLE CSS - LAYOUT I KOLORY
 st.markdown("""
@@ -161,3 +177,4 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
