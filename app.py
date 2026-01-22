@@ -86,7 +86,9 @@ zaprawy_db = {
 
     "Zap. NiMg16": {"Mg": 16.63, "Si": 0.0063},
 
-    "Zap. FeSiMg - LAMET 5504": {"Mg": 5.57, "Si": 0.47}
+    "Zap. FeSiMg - LAMET 5504": {"Mg": 5.57, "Si": 0.47
+
+    "Zap. FeSiMg - ELMAG": {"Mg": 9.17, "Si": 0.46}
 
 }
 
@@ -199,3 +201,4 @@ total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
 st.markdown(f'<div class="result-box"><div style="font-size: 25px;">ILOŚĆ ZAPRAWY</div><div class="result-val">{ilosc_zaprawy:.1f} kg</div></div>', unsafe_allow_html=True)
 
 st.markdown(f'<div class="si-box"><div style="color: white; font-size: 20px;">PRZEWIDYWANY PRZYROST Si Z CAŁEGO ZABIEGU:</div><div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div></div>', unsafe_allow_html=True)
+
