@@ -123,17 +123,36 @@ ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 1
 if nowa_kadz:
     ilosc_zaprawy *= 1.1
 
+# --- POPRAWIONA LOGIKA W SEKCJI 8 I 9 ---
+
+# Funkcje pomocnicze do zapisu zmian (callbacki)
+def update_topseed():
+    st.session_state.topseed_val = st.session_state.temp_topseed
+
+def update_kubek():
+    st.session_state.kubek_val = st.session_state.temp_kubek
+
 # 8. SEKCJA MATERIAŁÓW POMOCNICZYCH (EDYTOR)
 st.divider()
 st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
 with col1:
-    topseed_kg = st.number_input("Topseed [Kg]:", value=st.session_state.topseed_val, step=0.5)
-    st.session_state.topseed_val = topseed_kg
+    topseed_kg = st.number_input(
+        "Topseed [Kg]:", 
+        value=st.session_state.topseed_val, 
+        step=0.5, 
+        key='temp_topseed', 
+        on_change=update_topseed
+    )
 with col2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=st.session_state.kubek_val, step=0.5)
-    st.session_state.kubek_val = kubek_kg
+    kubek_kg = st.number_input(
+        "Modyfikacja do kubka [Kg]:", 
+        value=st.session_state.kubek_val, 
+        step=0.5, 
+        key='temp_kubek', 
+        on_change=update_kubek
+    )
 
 # 9. PRZYCISK RESETU
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
@@ -161,3 +180,4 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
