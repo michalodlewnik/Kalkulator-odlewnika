@@ -44,7 +44,7 @@ st.markdown("""
         background-color: #28a745; color: white; padding: 20px; 
         border-radius: 15px; text-align: center; margin-bottom: 20px;
     }
-    .result-val { font-size: 50px !important; font-weight: 800; }
+    .result-val { font-size: 40px !important; font-weight: 800; }
     
     /* 9. Ciemne tło dla sekcji Si */
     .si-box { 
@@ -117,6 +117,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
