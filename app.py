@@ -2,13 +2,23 @@ import streamlit as st
 
 st.markdown("""
     <style>
-    /* 1. Usunięcie marginesów na górze - delikatnie zostawione 0.5rem żeby nie uciekło */
-    .block-container { padding-top: 2rem !important; }
+    /* 1. Usunięcie marginesów na samej górze strony */
+    .block-container { padding-top: 0rem !important; padding-bottom: 0rem !important; }
     
-    /* 2. Styl ogólny tekstu */
+    /* 2. ZMNIEJSZENIE PRZERW MIĘDZY WIERSZAMI */
+    div[data-testid="stVerticalBlock"] > div {
+        margin-top: -12px !important;
+        padding-top: 0px !important;
+    }
+
+    /* 3. ZMNIEJSZENIE ODSTĘPÓW POD TYTUŁAMI h1 i h3 */
+    h1 { margin-bottom: 0px !important; padding-bottom: 5px !important; }
+    h3 { margin-bottom: 0px !important; padding-bottom: 5px !important; }
+       
+    /* 4. Styl ogólny tekstu */
     html, body, [class*="st-"] { font-size: 20px !important; font-weight: 600; }
 
-    /* 3. WIELKI POMARAŃCZOWY TYTUŁ (h1) */
+    /* 5. WIELKI POMARAŃCZOWY TYTUŁ (h1) */
     h1 { 
         font-size: 50px !important; 
         color: orange !important; /* Poprawiona literówka z oragne */
@@ -18,24 +28,24 @@ st.markdown("""
         display: block !important;
     }
 
-    /* 4. NAPIS "MATERIAŁY POMOCNICZE" (h3) */
+    /* 6. NAPIS "MATERIAŁY POMOCNICZE" (h3) */
     h3 { 
         font-size: 30px !important; 
         color: white !important;
         padding-top: 10px;
     }
 
-    /* 5. Styl pól do wpisywania liczb */
+    /* 7. Styl pól do wpisywania liczb */
     .stNumberInput input { height: 75px !important; font-size: 32px !important; color: #1f77b4 !important; }
     
-    /* 6. Zielone tło dla głównego wyniku */
+    /* 8. Zielone tło dla głównego wyniku */
     .result-box { 
         background-color: #28a745; color: white; padding: 20px; 
         border-radius: 15px; text-align: center; margin-bottom: 20px;
     }
-    .result-val { font-size: 55px !important; font-weight: 800; }
+    .result-val { font-size: 50px !important; font-weight: 800; }
     
-    /* 7. Ciemne tło dla sekcji Si */
+    /* 9. Ciemne tło dla sekcji Si */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 12px; text-align: center;
@@ -106,6 +116,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
