@@ -1,15 +1,15 @@
 import streamlit as st
 
-# --- 1. LOGIKA PAMIĘCI (Session State) ---
-# Inicjalizacja przed wszystkim innym
-if 'topseed_val' not in st.session_state:
-    st.session_state.topseed_val = 8.5
-if 'kubek_val' not in st.session_state:
-    st.session_state.kubek_val = 4.0
+# --- 1. LOGIKA PAMIĘCI (Inicjalizacja) ---
 if 'last_masa' not in st.session_state:
     st.session_state.last_masa = 1100.0
+# Tutaj definiujemy startowe wartości dla KLUCZY pól
+if 'topseed_input' not in st.session_state:
+    st.session_state.topseed_input = 8.5
+if 'kubek_input' not in st.session_state:
+    st.session_state.kubek_input = 4.0
 
-# --- 2. LAYOUT I STYLE CSS (Twoje podpunkty) ---
+# --- 2. LAYOUT I STYLE CSS (Bez zmian) ---
 st.markdown("""
     <style>
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
@@ -23,7 +23,6 @@ st.markdown("""
     .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
     hr { margin-top: 0px !important; margin-bottom: 0px !important; }
 
-    /* ŻÓŁTY PRZYCISK RESETU */
     div.stButton > button {
         width: 100% !important; height: 60px !important; background-color: #FFD700 !important; color: black !important;
         font-size: 22px !important; font-weight: bold !important; border-radius: 15px !important;
@@ -58,10 +57,10 @@ proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
 domyslny_kubek = round((4.0 * proporcja) * 2) / 2
 
-# Jeśli masa się zmieniła - wymuś nowe wartości domyślne
+# JEŚLI MASA SIĘ ZMIENI - NADPISUJEMY KLUCZE POLA
 if masa != st.session_state.last_masa:
-    st.session_state.topseed_val = domyslny_topseed
-    st.session_state.kubek_val = domyslny_kubek
+    st.session_state.topseed_input = domyslny_topseed
+    st.session_state.kubek_input = domyslny_kubek
     st.session_state.last_masa = masa
 
 # --- 6. OBLICZENIA METALURGICZNE ---
@@ -73,22 +72,21 @@ komponent_mg = (target_mg + 0.76 * (siarka - 0.01) + 0.007)
 ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 100
 if nowa_kadz: ilosc_zaprawy *= 1.1
 
-# --- 7. MATERIAŁY POMOCNICZE (EDYCJA) ---
+# --- 7. MATERIAŁY POMOCNICZE (KLUCZE ZAMIAST VALUE) ---
 st.divider()
 st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
 with col1:
-    topseed_kg = st.number_input("Topseed [Kg]:", value=st.session_state.topseed_val, step=0.5)
-    st.session_state.topseed_val = topseed_kg # Zapisz ręczną zmianę
+    # Używamy key - to eliminuje błąd podwójnego kliknięcia i "cofania"
+    topseed_kg = st.number_input("Topseed [Kg]:", key='topseed_input', step=0.5)
 with col2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=st.session_state.kubek_val, step=0.5)
-    st.session_state.kubek_val = kubek_kg # Zapisz ręczną zmianę
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", key='kubek_input', step=0.5)
 
 # --- 8. ŻÓŁTY PRZYCISK RESETU ---
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
-    st.session_state.topseed_val = domyslny_topseed
-    st.session_state.kubek_val = domyslny_kubek
+    st.session_state.topseed_input = domyslny_topseed
+    st.session_state.kubek_input = domyslny_kubek
     st.rerun()
 
 # --- 9. OBLICZENIA KRZEMU I WYNIKI ---
