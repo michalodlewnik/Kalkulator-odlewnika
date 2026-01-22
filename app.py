@@ -1,15 +1,14 @@
 import streamlit as st
 
-# --- 1. LOGIKA PAMIĘCI (Inicjalizacja) ---
+# --- 1. LOGIKA PAMIĘCI (Session State) ---
+if 'topseed_val' not in st.session_state:
+    st.session_state.topseed_val = 8.5
+if 'kubek_val' not in st.session_state:
+    st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state:
     st.session_state.last_masa = 1100.0
-# Tutaj definiujemy startowe wartości dla KLUCZY pól
-if 'topseed_input' not in st.session_state:
-    st.session_state.topseed_input = 8.5
-if 'kubek_input' not in st.session_state:
-    st.session_state.kubek_input = 4.0
 
-# --- 2. LAYOUT I STYLE CSS (Bez zmian) ---
+# --- 2. STYLE CSS (Twoje podpunkty) ---
 st.markdown("""
     <style>
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
@@ -52,16 +51,16 @@ siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, form
 wybrana = st.selectbox("Wybierz zaprawę:", list(zaprawy_db.keys()))
 nowa_kadz = st.checkbox("🔥 NOWA KADŹ (+10%)")
 
-# --- 5. LOGIKA OBLICZEŃ DOMYŚLNYCH ---
+# --- 5. LOGIKA RESETU PRZY ZMIANIE MASY ---
 proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
 domyslny_kubek = round((4.0 * proporcja) * 2) / 2
 
-# JEŚLI MASA SIĘ ZMIENI - NADPISUJEMY KLUCZE POLA
 if masa != st.session_state.last_masa:
-    st.session_state.topseed_input = domyslny_topseed
-    st.session_state.kubek_input = domyslny_kubek
+    st.session_state.topseed_val = domyslny_topseed
+    st.session_state.kubek_val = domyslny_kubek
     st.session_state.last_masa = masa
+    st.rerun()
 
 # --- 6. OBLICZENIA METALURGICZNE ---
 uzysk = 60.0 
@@ -72,21 +71,32 @@ komponent_mg = (target_mg + 0.76 * (siarka - 0.01) + 0.007)
 ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 100
 if nowa_kadz: ilosc_zaprawy *= 1.1
 
-# --- 7. MATERIAŁY POMOCNICZE (KLUCZE ZAMIAST VALUE) ---
+# --- 7. MATERIAŁY POMOCNICZE (Rozwiązanie problemu "drugiego kliknięcia") ---
 st.divider()
 st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
-with col1:
-    # Używamy key - to eliminuje błąd podwójnego kliknięcia i "cofania"
-    topseed_kg = st.number_input("Topseed [Kg]:", key='topseed_input', step=0.5)
-with col2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", key='kubek_input', step=0.5)
 
-# --- 8. ŻÓŁTY PRZYCISK RESETU ---
+with col1:
+    # Pobieramy wartość z sesji do zmiennej lokalnej
+    val_t = st.session_state.topseed_val
+    topseed_kg = st.number_input("Topseed [Kg]:", value=val_t, step=0.5)
+    # AKTUALIZUJEMY SESJĘ TYLKO JEŚLI WARTOŚĆ RZECZYWIŚCIE SIĘ ZMIENIŁA
+    if topseed_kg != st.session_state.topseed_val:
+        st.session_state.topseed_val = topseed_kg
+        st.rerun()
+
+with col2:
+    val_k = st.session_state.kubek_val
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=val_k, step=0.5)
+    if kubek_kg != st.session_state.kubek_val:
+        st.session_state.kubek_val = kubek_kg
+        st.rerun()
+
+# --- 8. ŻÓŁTY PRZYCISK RESETU (Błyskawiczny) ---
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
-    st.session_state.topseed_input = domyslny_topseed
-    st.session_state.kubek_input = domyslny_kubek
+    st.session_state.topseed_val = domyslny_topseed
+    st.session_state.kubek_val = domyslny_kubek
     st.rerun()
 
 # --- 9. OBLICZENIA KRZEMU I WYNIKI ---
