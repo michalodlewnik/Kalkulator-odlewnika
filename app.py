@@ -1,7 +1,7 @@
 import streamlit as st
 
 # --- 1. LOGIKA PAMIĘCI (Session State) ---
-# Inicjalizacja przed wszystkim innym
+# Inicjalizacja kluczy, jeśli nie istnieją
 if 'topseed_val' not in st.session_state:
     st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state:
@@ -9,7 +9,7 @@ if 'kubek_val' not in st.session_state:
 if 'last_masa' not in st.session_state:
     st.session_state.last_masa = 1100.0
 
-# --- 2. LAYOUT I STYLE CSS (Twoje podpunkty) ---
+# --- 2. STYLE CSS (Twój idealny layout) ---
 st.markdown("""
     <style>
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
@@ -58,7 +58,7 @@ proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
 domyslny_kubek = round((4.0 * proporcja) * 2) / 2
 
-# Jeśli masa się zmieniła - wymuś nowe wartości domyślne
+# Jeśli masa się zmieniła - przelicz i wymuś nowe wartości w pamięci
 if masa != st.session_state.last_masa:
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
@@ -79,11 +79,11 @@ st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
 with col1:
-    topseed_kg = st.number_input("Topseed [Kg]:", value=st.session_state.topseed_val, step=0.5)
-    st.session_state.topseed_val = topseed_kg # Zapisz ręczną zmianę
+    # Klucz 'topseed_val' jest powiązany bezpośrednio z sesją
+    topseed_kg = st.number_input("Topseed [Kg]:", key='topseed_val', step=0.5)
 with col2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=st.session_state.kubek_val, step=0.5)
-    st.session_state.kubek_val = kubek_kg # Zapisz ręczną zmianę
+    # Klucz 'kubek_val' jest powiązany bezpośrednio z sesją
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", key='kubek_val', step=0.5)
 
 # --- 8. ŻÓŁTY PRZYCISK RESETU ---
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
