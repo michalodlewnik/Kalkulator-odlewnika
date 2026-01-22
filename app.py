@@ -1,11 +1,10 @@
 import streamlit as st
 
 # 1. LOGIKA PAMIĘCI (Session State)
-# Musi być na początku, aby resetowanie działało bezbłędnie
 if 'topseed_val' not in st.session_state:
-    st.session_state.topseed_val = 8.5
+    st.session_state.topseed_val = 8.5  # Wartość startowa
 if 'kubek_val' not in st.session_state:
-    st.session_state.kubek_val = 4.0
+    st.session_state.kubek_val = 4.0   # Wartość startowa
 if 'last_masa' not in st.session_state:
     st.session_state.last_masa = 1100.0
 
@@ -125,36 +124,26 @@ if nowa_kadz:
 
 # --- POPRAWIONA LOGIKA W SEKCJI 8 I 9 ---
 
-# Funkcje pomocnicze do zapisu zmian (callbacki)
-def update_topseed():
-    st.session_state.topseed_val = st.session_state.temp_topseed
-
-def update_kubek():
-    st.session_state.kubek_val = st.session_state.temp_kubek
-
 # 8. SEKCJA MATERIAŁÓW POMOCNICZYCH (EDYTOR)
 st.divider()
 st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
 with col1:
+    # Używamy bezpośrednio klucza w st.number_input
     topseed_kg = st.number_input(
         "Topseed [Kg]:", 
-        value=st.session_state.topseed_val, 
         step=0.5, 
-        key='temp_topseed', 
-        on_change=update_topseed
+        key='topseed_val'
     )
 with col2:
     kubek_kg = st.number_input(
         "Modyfikacja do kubka [Kg]:", 
-        value=st.session_state.kubek_val, 
         step=0.5, 
-        key='temp_kubek', 
-        on_change=update_kubek
+        key='kubek_val'
     )
 
-# 9. PRZYCISK RESETU
+# 9. PRZYCISK RESETU (TERAZ MUSI DZIAŁAĆ)
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
@@ -180,4 +169,5 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
