@@ -1,6 +1,6 @@
 import streamlit as st
 
-# --- 1. LOGIKA PAMIĘCI ---
+# --- 1. LOGIKA PAMIĘCI (Session State) ---
 if 'topseed_val' not in st.session_state:
     st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state:
@@ -8,7 +8,7 @@ if 'kubek_val' not in st.session_state:
 if 'last_masa' not in st.session_state:
     st.session_state.last_masa = 1100.0
 
-# --- 2. STYLE CSS ---
+# --- 2. STYLE CSS (Twoje podpunkty) ---
 st.markdown("""
     <style>
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
@@ -20,13 +20,15 @@ st.markdown("""
     .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
     .result-val { font-size: 50px !important; font-weight: 800; }
     .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
-    
-    /* ŻÓŁTY PRZYCISK */
+    hr { margin-top: 0px !important; margin-bottom: 0px !important; }
+
     div.stButton > button {
         width: 100% !important; height: 60px !important; background-color: #FFD700 !important; color: black !important;
         font-size: 22px !important; font-weight: bold !important; border-radius: 15px !important;
-        border: none !important; margin-top: 10px !important;
+        border: none !important; margin-top: 10px !important; transition: all 0.2s ease;
     }
+    div.stButton > button:hover { background-color: #FFC400 !important; transform: scale(1.01); }
+    div.stButton > button:active { transform: scale(0.98); background-color: #E6B800 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -49,7 +51,7 @@ siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, form
 wybrana = st.selectbox("Wybierz zaprawę:", list(zaprawy_db.keys()))
 nowa_kadz = st.checkbox("🔥 NOWA KADŹ (+10%)")
 
-# --- 5. LOGIKA RESETU MASY ---
+# --- 5. LOGIKA RESETU PRZY ZMIANIE MASY ---
 proporcja = masa / 1100
 domyslny_topseed = round((8.8 * proporcja) * 2) / 2
 domyslny_kubek = round((4.0 * proporcja) * 2) / 2
@@ -58,9 +60,9 @@ if masa != st.session_state.last_masa:
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
     st.session_state.last_masa = masa
-    # Nie robimy rerun tutaj, pozwalamy kodowi płynąć dalej
+    st.rerun()
 
-# --- 6. OBLICZENIA ZAPRAWY ---
+# --- 6. OBLICZENIA METALURGICZNE ---
 uzysk = 60.0 
 mg_sklad = zaprawy_db[wybrana]["Mg"]
 si_sklad_zap = zaprawy_db[wybrana]["Si"]
@@ -69,28 +71,35 @@ komponent_mg = (target_mg + 0.76 * (siarka - 0.01) + 0.007)
 ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk)) * (temp / 1450)) * 100
 if nowa_kadz: ilosc_zaprawy *= 1.1
 
-# --- 7. MATERIAŁY POMOCNICZE (WERSJA BEZ RERUN) ---
+# --- 7. MATERIAŁY POMOCNICZE (Rozwiązanie problemu "drugiego kliknięcia") ---
 st.divider()
 st.subheader("Obliczone materiały pomocnicze (można edytować):")
 
 col1, col2 = st.columns(2)
 
-# Używamy key bezpośrednio powiązanego z session_state, ale bez ręcznego rerunowania przy zmianie
 with col1:
-    topseed_kg = st.number_input("Topseed [Kg]:", value=st.session_state.topseed_val, step=0.5, key="ts_input")
-    st.session_state.topseed_val = topseed_kg # Ciche przypisanie
+    # Pobieramy wartość z sesji do zmiennej lokalnej
+    val_t = st.session_state.topseed_val
+    topseed_kg = st.number_input("Topseed [Kg]:", value=val_t, step=0.5)
+    # AKTUALIZUJEMY SESJĘ TYLKO JEŚLI WARTOŚĆ RZECZYWIŚCIE SIĘ ZMIENIŁA
+    if topseed_kg != st.session_state.topseed_val:
+        st.session_state.topseed_val = topseed_kg
+        st.rerun()
 
 with col2:
-    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=st.session_state.kubek_val, step=0.5, key="kb_input")
-    st.session_state.kubek_val = kubek_kg # Ciche przypisanie
+    val_k = st.session_state.kubek_val
+    kubek_kg = st.number_input("Modyfikacja do kubka [Kg]:", value=val_k, step=0.5)
+    if kubek_kg != st.session_state.kubek_val:
+        st.session_state.kubek_val = kubek_kg
+        st.rerun()
 
-# --- 8. ŻÓŁTY PRZYCISK RESETU ---
+# --- 8. ŻÓŁTY PRZYCISK RESETU (Błyskawiczny) ---
 if st.button("🔄 PRZYWRÓĆ SUGEROWANE DAWKI", use_container_width=True):
     st.session_state.topseed_val = domyslny_topseed
     st.session_state.kubek_val = domyslny_kubek
     st.rerun()
 
-# --- 9. WYNIKI ---
+# --- 9. OBLICZENIA KRZEMU I WYNIKI ---
 si_z_zaprawy = (ilosc_zaprawy * si_sklad_zap) / masa * 100
 si_z_topseed = (topseed_kg * 0.485) / masa * 100
 si_z_kubka = (kubek_kg * 0.7496) / masa * 100
