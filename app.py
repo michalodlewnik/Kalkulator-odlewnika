@@ -8,7 +8,7 @@ st.markdown("""
     
     /* 2. ZMNIEJSZENIE PRZERW MIĘDZY WIERSZAMI */
     div[data-testid="stVerticalBlock"] > div {
-        margin-top: -10px !important;
+        margin-top: -7px !important;
         padding-top: 0px !important;
     }
 
@@ -123,6 +123,7 @@ st.markdown(f"""
         <div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
