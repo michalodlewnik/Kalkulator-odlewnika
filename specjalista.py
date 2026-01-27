@@ -7,10 +7,20 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 2. STYLE CSS ---
+# --- 2. STYLE CSS I SKRYPTY ---
 st.markdown("""
+    <script>
+    // Skrypt wymuszający klawiaturę numeryczną na telefonach
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.setAttribute("inputmode", "decimal");
+        });
+    });
+    </script>
+
     <style>
-    /* 1. Obniżenie tytułu, żeby nie ucinało ikonki */
+    /* 1. Obniżenie tytułu */
     .block-container { 
         padding-top: 3.5rem !important; 
         padding-bottom: 3rem !important; 
@@ -20,42 +30,44 @@ st.markdown("""
     h1 { color: #00BFFF !important; text-align: center; margin-bottom: 5px !important; font-size: 36px !important; }
     h2 { color: #FFA500 !important; font-size: 24px !important; margin-bottom: 5px !important; }
     
-    /* Styl nagłówka 'Materiały pomocnicze' i 'Uzysk' - żeby były identyczne */
+    /* Nagłówki sekcji (identyczne) */
     .custom-header {
         font-size: 22px !important;
         font-weight: 600 !important;
         color: white !important;
         margin-bottom: 10px !important;
         padding-top: 10px !important;
+        text-align: center; /* Wyśrodkowanie nagłówków */
     }
     
-    /* Zmniejszenie odstępów */
-    div[data-testid="stExpander"] { margin-bottom: 5px !important; }
-    .stMarkdown { margin-bottom: -5px !important; }
-    
-    /* Karty wyników */
+    /* Karty wyników (Zielona - Zaprawa) */
     .result-box { 
-        background-color: #28a745; color: white; padding: 10px; 
-        border-radius: 10px; text-align: center; margin-top: 5px; margin-bottom: 5px;
+        background-color: #28a745; color: white; padding: 15px; 
+        border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
     }
-    .result-val { font-size: 30px !important; font-weight: 800; }
     
-    /* Styl suwaków i inputów */
+    /* Karta wyniku Si (Czarna - Nowy Styl) */
+    .si-box { 
+        background-color: #333333; color: #00ff00; padding: 15px; 
+        border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
+        border: 1px solid #444; /* Delikatna ramka */
+    }
+    
+    /* Styl wartości w wynikach (duża czcionka) */
+    .result-val { font-size: 35px !important; font-weight: 800; display: block; margin-top: 5px;}
+    .result-label { font-size: 20px !important; font-weight: 600; }
+    
+    /* Inputy i Suwaki */
     .stNumberInput input { height: 50px !important; font-size: 22px !important; color: #1f77b4 !important; }
-    /* Bardzo mały margines pod suwakami */
     .stSlider [data-baseweb="slider"] { margin-bottom: 5px !important; }
     
-    /* Przycisk Reset - Efekty */
+    /* Przycisk Reset */
     div.stButton > button {
         background-color: #FFD700 !important; color: black !important;
         font-size: 20px !important; font-weight: bold !important; border-radius: 12px !important; border: none !important;
-        transition: all 0.1s ease-in-out; /* Płynne przejście */
+        transition: all 0.1s ease-in-out;
     }
-    /* Efekt wciśnięcia */
-    div.stButton > button:active {
-        transform: scale(0.95) !important; /* Zmniejszenie przycisku */
-        background-color: #e6c200 !important; /* Lekkie przyciemnienie */
-    }
+    div.stButton > button:active { transform: scale(0.95) !important; background-color: #e6c200 !important; }
     
     /* Zakładki */
     .stTabs [data-baseweb="tab-list"] { gap: 5px; }
@@ -66,7 +78,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 3.2")
+st.title("🔬 Panel Specjalisty 3.3")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -99,11 +111,10 @@ with tab1:
     
     wybrana = st.selectbox("Rodzaj zaprawy:", list(zaprawy_db.keys()))
     
-    # Ujednolicony nagłówek dla Uzysku
     st.markdown('<div class="custom-header">Zakładany Uzysk Mg [%]:</div>', unsafe_allow_html=True)
     uzysk_custom = st.slider("", 45, 75, value=60, step=1, label_visibility="collapsed")
 
-    # Logika resetu
+    # Reset
     proporcja = masa / 1100
     domyslny_topseed = max(4.0, min(12.0, round((8.8 * proporcja) * 2) / 2))
     domyslny_kubek = max(1.0, min(6.0, round((4.0 * proporcja) * 2) / 2))
@@ -120,8 +131,6 @@ with tab1:
     ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk_custom)) * (temp / 1450)) * 100
 
     st.markdown("---")
-    
-    # Ujednolicony nagłówek dla Materiałów
     st.markdown('<div class="custom-header">Materiały pomocnicze:</div>', unsafe_allow_html=True)
     
     topseed_kg = st.slider("Topseed [Kg]:", 4.0, 12.0, value=st.session_state.topseed_val, step=0.5)
@@ -130,7 +139,6 @@ with tab1:
     kubek_kg = st.slider("Modyfikacja do kubka [Kg]:", 1.0, 6.0, value=st.session_state.kubek_val, step=0.5)
     st.session_state.kubek_val = kubek_kg
 
-    # Przycisk na całą szerokość z efektem wciśnięcia
     if st.button("🔄 RESETUJ SUGEROWANE", use_container_width=True):
         st.session_state.topseed_val = domyslny_topseed
         st.session_state.kubek_val = domyslny_kubek
@@ -141,8 +149,20 @@ with tab1:
     si_z_kubka = (kubek_kg * 0.7496) / masa * 100
     total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
 
-    st.markdown(f'<div class="result-box"><div style="font-size: 20px;">ILOŚĆ ZAPRAWY (Uzysk {uzysk_custom}%)</div><div class="result-val">{ilosc_zaprawy:.1f} kg</div></div>', unsafe_allow_html=True)
-    st.info(f"PRZEWIDYWANY PRZYROST Si: +{total_si_inc:.2f}%")
+    # --- WYNIKI Z NOWYM STYLEM DLA Si ---
+    st.markdown(f"""
+        <div class="result-box">
+            <div class="result-label">ILOŚĆ ZAPRAWY (Uzysk {uzysk_custom}%)</div>
+            <div class="result-val">{ilosc_zaprawy:.1f} kg</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f"""
+        <div class="si-box">
+            <div class="result-label">PRZEWIDYWANY PRZYROST Si</div>
+            <div class="result-val">+{total_si_inc:.2f}%</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 
 # ==============================================================================
@@ -169,7 +189,7 @@ with tab2:
         
         if cel_c > obecne_c:
             wynik_c = oblicz_korkte(masa_korekta, obecne_c, cel_c, wsad_c)
-            st.markdown(f'<div class="result-box">DODAJ NAWĘGLACZA:<br><span class="result-val">{wynik_c:.2f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ NAWĘGLACZA:</span><br><span class="result-val">{wynik_c:.2f} kg</span></div>', unsafe_allow_html=True)
         elif cel_c < obecne_c:
             st.warning("Cel mniejszy niż obecna! Zjedź niżej do sekcji 'Zbijanie Węgla'.")
         else:
@@ -183,7 +203,7 @@ with tab2:
         
         if cel_si > obecne_si:
             wynik_si = oblicz_korkte(masa_korekta, obecne_si, cel_si, wsad_si)
-            st.markdown(f'<div class="result-box">DODAJ FeSi:<br><span class="result-val">{wynik_si:.2f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ FeSi:</span><br><span class="result-val">{wynik_si:.2f} kg</span></div>', unsafe_allow_html=True)
         else:
             st.info("Skład OK.")
 
@@ -195,7 +215,7 @@ with tab2:
         
         if cu_dest > cu_curr:
             res_cu = oblicz_korkte(masa_korekta, cu_curr, cu_dest, cu_cont)
-            st.markdown(f'<div class="result-box">DODAJ MIEDZI:<br><span class="result-val">{res_cu:.2f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ MIEDZI:</span><br><span class="result-val">{res_cu:.2f} kg</span></div>', unsafe_allow_html=True)
         else:
             st.success("Skład OK.")
 
@@ -207,7 +227,7 @@ with tab2:
         
         if ni_dest > ni_curr:
             res_ni = oblicz_korkte(masa_korekta, ni_curr, ni_dest, ni_cont)
-            st.markdown(f'<div class="result-box">DODAJ NIKLU:<br><span class="result-val">{res_ni:.2f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ NIKLU:</span><br><span class="result-val">{res_ni:.2f} kg</span></div>', unsafe_allow_html=True)
         else:
             st.success("Skład OK.")
 
@@ -219,7 +239,7 @@ with tab2:
         
         if mo_dest > mo_curr:
             res_mo = oblicz_korkte(masa_korekta, mo_curr, mo_dest, mo_cont)
-            st.markdown(f'<div class="result-box">DODAJ FeMo:<br><span class="result-val">{res_mo:.2f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ FeMo:</span><br><span class="result-val">{res_mo:.2f} kg</span></div>', unsafe_allow_html=True)
         else:
             st.success("Skład OK.")
 
@@ -233,7 +253,7 @@ with tab2:
         
         if c_zb_dest < c_zb_curr:
             res_stal = oblicz_korkte(masa_korekta, c_zb_curr, c_zb_dest, c_zb_stal)
-            st.markdown(f'<div class="result-box" style="background-color: #dc3545;">DODAJ STALI:<br><span class="result-val">{res_stal:.1f} kg</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="result-box" style="background-color: #dc3545;"><span class="result-label">DODAJ STALI:</span><br><span class="result-val">{res_stal:.1f} kg</span></div>', unsafe_allow_html=True)
         else:
             st.info("Aby podnieść węgiel, użyj pierwszej sekcji (Nawęglanie).")
 
