@@ -68,14 +68,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 4.0")
+st.title("🔬 Panel Specjalisty 4.1")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
-# --- 4. ZAKŁADKI (TERAZ 3) ---
+# --- 4. ZAKŁADKI ---
 tab1, tab2, tab3 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA"])
 
 # ==============================================================================
@@ -262,58 +262,65 @@ with tab2:
 
 
 # ==============================================================================
-# ZAKŁADKA 3: ŚCIANKA (DOBÓR SKŁADU) - NOWOŚĆ!
+# ZAKŁADKA 3: ŚCIANKA (DOBÓR SKŁADU)
 # ==============================================================================
 with tab3:
-    st.markdown("### Dobór składu do grubości ścianki")
-    st.info("Poniższe wartości są sugerowane dla żeliwa sferoidalnego (GJS).")
+    st.markdown("### Dobór parametrów do ścianki")
+    st.info("Poniższe wyliczenia bazują na Twojej tabeli technologicznej.")
 
     # Suwak grubości ścianki
     st.markdown('<div class="custom-header">Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
     grubosc = st.slider("", 5, 100, 15, step=1, label_visibility="collapsed")
 
-    # LOGIKA DOBORU (Zaszyta tabela technologiczna)
-    # Wartości przybliżone - możesz je korygować!
-    if grubosc <= 8:
-        cel_c_min, cel_c_max = 3.75, 3.90
-        cel_si_min, cel_si_max = 2.60, 2.90
-        uwaga = "⚠️ Ryzyko zabieleń! Utrzymuj wysoki węgiel i krzem."
-        kolor_uwagi = "#dc3545" # Czerwony
-    elif grubosc <= 15:
-        cel_c_min, cel_c_max = 3.65, 3.80
-        cel_si_min, cel_si_max = 2.45, 2.65
-        uwaga = "✅ Standardowa cienka ścianka."
-        kolor_uwagi = "#28a745" # Zielony
-    elif grubosc <= 30:
-        cel_c_min, cel_c_max = 3.60, 3.75
-        cel_si_min, cel_si_max = 2.30, 2.50
-        uwaga = "✅ Standardowa średnia ścianka."
-        kolor_uwagi = "#28a745"
-    elif grubosc <= 60:
-        cel_c_min, cel_c_max = 3.50, 3.65
-        cel_si_min, cel_si_max = 2.10, 2.30
-        uwaga = "⚠️ Ryzyko porowatości. Pilnuj, by nie przewęglić."
-        kolor_uwagi = "#ffc107" # Żółty/Pomarańczowy
-        if grubosc > 50: kolor_uwagi = "#dc3545"
-    else: # > 60mm
-        cel_c_min, cel_c_max = 3.40, 3.60
-        cel_si_min, cel_si_max = 1.90, 2.10
-        uwaga = "⛔ Bardzo gruba ścianka. Ryzyko flotacji grafitu!"
-        kolor_uwagi = "#dc3545"
+    # -----------------------------------------------------------------------
+    # ⚙️ KONFIGURACJA DANYCH (TUTAJ WPISZ DANE Z TABELKI)
+    # -----------------------------------------------------------------------
+    # Format: [Min_mm, Max_mm, Docelowe_CE, Docelowe_C, Docelowe_Si]
+    # Uzupełnij poniższą listę swoimi danymi!
+    tabela_technologiczna = [
+        # Od,  Do,  Cel CE, Cel C, Cel Si
+        (0,   8,   4.60,   3.80,  2.40),
+        (9,   15,  4.50,   3.75,  2.25),
+        (16,  30,  4.40,   3.70,  2.10),
+        (31,  60,  4.30,   3.60,  2.10),
+        (61,  100, 4.20,   3.50,  2.10) 
+    ]
+    # -----------------------------------------------------------------------
 
-    cel_ce_min = cel_c_min + (cel_si_min / 3)
-    cel_ce_max = cel_c_max + (cel_si_max / 3)
+    # Wyszukiwanie odpowiedniego wiersza
+    znaleziono = False
+    target_ce = 0
+    target_c = 0
+    target_si = 0
 
+    for wiersz in tabela_technologiczna:
+        min_g, max_g, ce, c, si = wiersz
+        if min_g <= grubosc <= max_g:
+            target_ce = ce
+            target_c = c
+            target_si = si
+            znaleziono = True
+            break
+    
+    if not znaleziono:
+        st.error("Brak danych dla tej grubości w tabeli!")
+        target_ce, target_c, target_si = 0, 0, 0
+
+    # Obliczanie tolerancji (+/- 2% dla CE)
+    # Wzór: CE = C + Si/3
+    ce_min = target_ce * 0.98
+    ce_max = target_ce * 1.02
+
+    # Wyświetlanie wyników
     st.markdown("---")
     
-    # Wyświetlanie wyników w Twoim ulubionym stylu
     col_w1, col_w2 = st.columns(2)
     
     with col_w1:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
                 <div class="result-label">CEL: WĘGIEL (C)</div>
-                <div class="result-val" style="color: orange;">{cel_c_min:.2f} - {cel_c_max:.2f} %</div>
+                <div class="result-val" style="color: orange;">{target_c:.2f} %</div>
             </div>
         """, unsafe_allow_html=True)
         
@@ -321,20 +328,15 @@ with tab3:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
                 <div class="result-label">CEL: KRZEM (Si)</div>
-                <div class="result-val" style="color: #00BFFF;">{cel_si_min:.2f} - {cel_si_max:.2f} %</div>
+                <div class="result-val" style="color: #00BFFF;">{target_si:.2f} %</div>
             </div>
         """, unsafe_allow_html=True)
 
+    # Wynik CE z tolerancją
     st.markdown(f"""
         <div class="si-box">
-            <div class="result-label">CEL: RÓWNOWAŻNIK WĘGLA (CE)</div>
-            <div class="result-val">{cel_ce_min:.2f} - {cel_ce_max:.2f}</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Pasek uwagi
-    st.markdown(f"""
-        <div style="background-color: {kolor_uwagi}; color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; font-size: 20px; margin-top: 10px;">
-            {uwaga}
+            <div class="result-label">CEL: RÓWNOWAŻNIK (CE) <br><span style="font-size: 16px; color: #888;">(Tolerancja +/- 2%)</span></div>
+            <div class="result-val">{ce_min:.2f} - {ce_max:.2f}</div>
+            <div style="font-size: 20px; color: #aaa; margin-top: 5px;">Cel idealny: {target_ce:.2f}</div>
         </div>
     """, unsafe_allow_html=True)
