@@ -26,7 +26,8 @@ st.markdown("""
     .result-label { font-size: 20px !important; font-weight: 600; text-transform: uppercase; }
     
     .stNumberInput input { height: 50px !important; font-size: 22px !important; color: #1f77b4 !important; }
-    .stSlider [data-baseweb="slider"] { margin-bottom: 5px !important; }
+    /* Suwaki */
+    .stSlider [data-baseweb="slider"] { margin-bottom: 10px !important; }
     
     div.stButton > button { background-color: #FFD700 !important; color: black !important; font-size: 20px !important; font-weight: bold !important; border-radius: 12px !important; border: none !important; transition: all 0.1s ease-in-out; }
     div.stButton > button:active { transform: scale(0.95) !important; background-color: #e6c200 !important; }
@@ -38,7 +39,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 4.4")
+st.title("🔬 Panel Specjalisty 5.0")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -232,17 +233,16 @@ with tab2:
 
 
 # ==============================================================================
-# ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE)
+# ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE - SUWAK SI)
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    st.info("Algorytm wyznacza zakresy C i Si dla wymaganego CE.")
+    st.info("Ustaw grubość ścianki, a następnie zawęź zakres Si, aby otrzymać wymaganą tolerancję C.")
 
-    st.markdown('<div class="custom-header">Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
-    grubosc = st.slider("", 5, 100, 20, step=1, label_visibility="collapsed")
+    st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
+    grubosc = st.slider("", 5, 100, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
 
-    # 1. BAZA DANYCH CE (z pliku Excel)
-    # Mapowanie: Zakres grubości -> CEL CE
+    # BAZA DANYCH CE
     tabela_ce = [
         (0,  7,   4.75),
         (8,  12,  4.60),
@@ -265,39 +265,46 @@ with tab3:
             target_ce = ce
             break
 
-    # 2. OBLICZANIE ZAKRESÓW (WSTECZNE)
-    # Zakładamy stały zakres Si: 2.00 - 2.90
-    # Wzór: CE = C + Si/3  =>  C = CE - Si/3
+    # SUWAK ZAKRESU SI (2 PUNKTY RUCHOME)
+    st.markdown("---")
+    st.markdown('<div class="custom-header">2. Planowany zakres Krzemu (Si) [%]:</div>', unsafe_allow_html=True)
     
-    si_min_limit = 2.00
-    si_max_limit = 2.90
+    # Range slider zwraca tuplę (min, max)
+    si_range = st.slider("", 2.00, 2.90, (2.00, 2.90), step=0.01, label_visibility="collapsed", key="slider_si_range")
     
-    # Najniższy możliwy węgiel (przy najwyższym Si)
-    c_min_calc = target_ce - (si_max_limit / 3.0)
-    # Najwyższy możliwy węgiel (przy najniższym Si)
-    c_max_calc = target_ce - (si_min_limit / 3.0)
+    si_min_user = si_range[0]
+    si_max_user = si_range[1]
+
+    # OBLICZANIE WĘGLA (ODWROTNOŚĆ)
+    # Żeby utrzymać CE przy WYSOKIM krzemie, potrzebujesz NISKIEGO węgla.
+    # Żeby utrzymać CE przy NISKIM krzemie, potrzebujesz WYSOKIEGO węgla.
+    # Wzór: C = CE - Si/3
     
-    # Tolerancja wyświetlania CE
-    ce_disp_min = target_ce - 0.05
-    ce_disp_max = target_ce + 0.05
+    c_lower_bound = target_ce - (si_max_user / 3.0) # To jest min C (dla max Si)
+    c_upper_bound = target_ce - (si_min_user / 3.0) # To jest max C (dla min Si)
+
+    # Obliczanie tolerancji CE (+/- 1%)
+    ce_min = target_ce * 0.99
+    ce_max = target_ce * 1.01
 
     st.markdown("---")
     
+    # WYNIKI
     col_w1, col_w2 = st.columns(2)
     
     with col_w1:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">ZAKRES C [%]</div>
-                <div class="result-val" style="color: orange; font-size: 30px !important;">{c_min_calc:.2f} - {c_max_calc:.2f}</div>
+                <div class="result-label">WYMAGANY WĘGIEL (C)</div>
+                <div class="result-val" style="color: orange; font-size: 30px !important;">{c_lower_bound:.2f} - {c_upper_bound:.2f}</div>
             </div>
         """, unsafe_allow_html=True)
         
     with col_w2:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">ZAKRES Si [%]</div>
-                <div class="result-val" style="color: #00BFFF; font-size: 30px !important;">{si_min_limit:.2f} - {si_max_limit:.2f}</div>
+                <div class="result-label">WYBRANY KRZEM (Si)</div>
+                <div class="result-val" style="color: #00BFFF; font-size: 30px !important;">{si_min_user:.2f} - {si_max_user:.2f}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -305,6 +312,6 @@ with tab3:
         <div class="si-box">
             <div class="result-label">DOCELOWY RÓWNOWAŻNIK (CE)</div>
             <div class="result-val">{target_ce:.2f}</div>
-            <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%)</div>
+            <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%: {ce_min:.2f} - {ce_max:.2f})</div>
         </div>
     """, unsafe_allow_html=True)
