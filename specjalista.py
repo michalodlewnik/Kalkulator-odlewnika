@@ -7,20 +7,38 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 2. STYLE CSS I SKRYPTY ---
+# --- 2. JAVASCRIPT (OBSERWATOR - WYMUSZENIE KLAWIATURY) ---
 st.markdown("""
     <script>
-    // Skrypt wymuszający klawiaturę numeryczną na telefonach
-    document.addEventListener("DOMContentLoaded", function() {
+    // Funkcja ustawiająca tryb klawiatury
+    function setInputMode() {
         const inputs = document.querySelectorAll('input[type="number"]');
         inputs.forEach(input => {
-            input.setAttribute("inputmode", "decimal");
+            // inputmode="decimal" wymusza klawiaturę numeryczną z kropką/przecinkiem
+            input.setAttribute("inputmode", "decimal"); 
+            // pattern pomaga na starszych iOS
+            input.setAttribute("pattern", "[0-9]*");
         });
+    }
+
+    // Obserwator zmian na stronie (bo Streamlit podmienia elementy w locie)
+    const observer = new MutationObserver((mutations) => {
+        setInputMode();
+    });
+
+    // Start obserwowania całej strony
+    document.addEventListener("DOMContentLoaded", () => {
+        const body = document.querySelector("body");
+        observer.observe(body, { childList: true, subtree: true });
+        setInputMode(); // Odpal raz na start
     });
     </script>
+""", unsafe_allow_html=True)
 
+# --- 3. STYLE CSS ---
+st.markdown("""
     <style>
-    /* 1. Obniżenie tytułu */
+    /* Obniżenie tytułu */
     .block-container { 
         padding-top: 3.5rem !important; 
         padding-bottom: 3rem !important; 
@@ -30,14 +48,14 @@ st.markdown("""
     h1 { color: #00BFFF !important; text-align: center; margin-bottom: 5px !important; font-size: 36px !important; }
     h2 { color: #FFA500 !important; font-size: 24px !important; margin-bottom: 5px !important; }
     
-    /* Nagłówki sekcji (identyczne) */
+    /* Nagłówki sekcji */
     .custom-header {
         font-size: 22px !important;
         font-weight: 600 !important;
         color: white !important;
         margin-bottom: 10px !important;
         padding-top: 10px !important;
-        text-align: center; /* Wyśrodkowanie nagłówków */
+        text-align: center;
     }
     
     /* Karty wyników (Zielona - Zaprawa) */
@@ -46,16 +64,16 @@ st.markdown("""
         border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
     }
     
-    /* Karta wyniku Si (Czarna - Nowy Styl) */
+    /* Karta wyniku Si (Czarna - Identyczna wielkość jak Zielona) */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
-        border: 1px solid #444; /* Delikatna ramka */
+        border: 1px solid #444;
     }
     
-    /* Styl wartości w wynikach (duża czcionka) */
+    /* Styl wartości w wynikach */
     .result-val { font-size: 35px !important; font-weight: 800; display: block; margin-top: 5px;}
-    .result-label { font-size: 20px !important; font-weight: 600; }
+    .result-label { font-size: 20px !important; font-weight: 600; text-transform: uppercase; }
     
     /* Inputy i Suwaki */
     .stNumberInput input { height: 50px !important; font-size: 22px !important; color: #1f77b4 !important; }
@@ -78,14 +96,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 3.3")
+st.title("🔬 Panel Specjalisty 3.4")
 
-# --- 3. LOGIKA PAMIĘCI ---
+# --- 4. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
-# --- 4. ZAKŁADKI ---
+# --- 5. ZAKŁADKI ---
 tab1, tab2 = st.tabs(["⚖️ 1. ZAPRAWA (Mg)", "📊 2. KOREKTA SKŁADU"])
 
 # ==============================================================================
@@ -114,7 +132,7 @@ with tab1:
     st.markdown('<div class="custom-header">Zakładany Uzysk Mg [%]:</div>', unsafe_allow_html=True)
     uzysk_custom = st.slider("", 45, 75, value=60, step=1, label_visibility="collapsed")
 
-    # Reset
+    # Reset logiki
     proporcja = masa / 1100
     domyslny_topseed = max(4.0, min(12.0, round((8.8 * proporcja) * 2) / 2))
     domyslny_kubek = max(1.0, min(6.0, round((4.0 * proporcja) * 2) / 2))
@@ -149,7 +167,7 @@ with tab1:
     si_z_kubka = (kubek_kg * 0.7496) / masa * 100
     total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
 
-    # --- WYNIKI Z NOWYM STYLEM DLA Si ---
+    # WYNIKI
     st.markdown(f"""
         <div class="result-box">
             <div class="result-label">ILOŚĆ ZAPRAWY (Uzysk {uzysk_custom}%)</div>
@@ -223,52 +241,4 @@ with tab2:
         col1, col2, col3 = st.columns(3)
         ni_curr = col1.number_input("Obecny Ni [%]:", 0.00, 5.00, 2.13, 0.01)
         ni_dest = col2.number_input("Cel Ni [%]:", 0.00, 5.00, 2.40, 0.01)
-        ni_cont = col3.number_input("Ni w dodatku [%]:", 0.0, 100.0, 99.0, 1.0)
-        
-        if ni_dest > ni_curr:
-            res_ni = oblicz_korkte(masa_korekta, ni_curr, ni_dest, ni_cont)
-            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ NIKLU:</span><br><span class="result-val">{res_ni:.2f} kg</span></div>', unsafe_allow_html=True)
-        else:
-            st.success("Skład OK.")
-
-    with st.expander("🟣 MOLIBDEN (Mo)", expanded=False):
-        col1, col2, col3 = st.columns(3)
-        mo_curr = col1.number_input("Obecny Mo [%]:", 0.00, 5.00, 0.00, 0.01)
-        mo_dest = col2.number_input("Cel Mo [%]:", 0.00, 5.00, 0.20, 0.01)
-        mo_cont = col3.number_input("Mo w dodatku [%]:", 0.0, 100.0, 69.0, 1.0)
-        
-        if mo_dest > mo_curr:
-            res_mo = oblicz_korkte(masa_korekta, mo_curr, mo_dest, mo_cont)
-            st.markdown(f'<div class="result-box"><span class="result-label">DODAJ FeMo:</span><br><span class="result-val">{res_mo:.2f} kg</span></div>', unsafe_allow_html=True)
-        else:
-            st.success("Skład OK.")
-
-    st.markdown("---")
-    
-    with st.expander("📉 ZBIJANIE WĘGLA (Dodatek Stali)", expanded=False):
-        c1, c2, c3 = st.columns(3)
-        c_zb_curr = c1.number_input("Aktualny C [%]:", 0.0, 5.0, 3.90, 0.01, key="czb_cur")
-        c_zb_dest = c2.number_input("Cel C [%]:", 0.0, 5.0, 3.73, 0.01, key="czb_dest")
-        c_zb_stal = c3.number_input("C w Złomie [%]:", 0.0, 2.0, 0.10, 0.01, key="czb_stal")
-        
-        if c_zb_dest < c_zb_curr:
-            res_stal = oblicz_korkte(masa_korekta, c_zb_curr, c_zb_dest, c_zb_stal)
-            st.markdown(f'<div class="result-box" style="background-color: #dc3545;"><span class="result-label">DODAJ STALI:</span><br><span class="result-val">{res_stal:.1f} kg</span></div>', unsafe_allow_html=True)
-        else:
-            st.info("Aby podnieść węgiel, użyj pierwszej sekcji (Nawęglanie).")
-
-    st.markdown("---")
-    
-    with st.expander("🔄 SYMULACJA MIESZANIA (Średnia ważona)", expanded=False):
-        col_m1, col_m2 = st.columns(2)
-        with col_m1:
-            m1_mass = st.number_input("Masa 1 [kg]:", 0, 10000, 1000)
-            m1_pct = st.number_input("Skład 1 [%]:", 0.0, 100.0, 3.5, key="m1p")
-        with col_m2:
-            m2_mass = st.number_input("Masa 2 [kg]:", 0, 10000, 500)
-            m2_pct = st.number_input("Skład 2 [%]:", 0.0, 100.0, 3.8, key="m2p")
-            
-        if (m1_mass + m2_mass) > 0:
-            wynik_mix = (m1_mass * m1_pct + m2_mass * m2_pct) / (m1_mass + m2_mass)
-            st.markdown(f"**Wynikowy skład chemiczny:**")
-            st.markdown(f'<div style="font-size: 40px; color: yellow; text-align: center; font-weight: bold;">{wynik_mix:.3f} %</div>', unsafe_allow_html=True)
+        ni_cont = col3.number_input("Ni w dodatku [%]:", 0.0, 100.
