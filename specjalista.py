@@ -48,7 +48,7 @@ zaprawy_db = {
 }
 
 # --- 4. WEJŚCIE DANYCH GŁÓWNYCH ---
-masa = st.number_input("Ilość metalu w kadzi [Kg]:", value=1100, step=5)
+masa = st.number_input("Ilość metalu w kadzi [Kg]:", value=1100, step=20)
 temp = st.number_input("Temperatura spustu [oC]:", value=1480, step=10)
 target_mg = st.number_input("Magnez końcowy [%]:", value=0.045, step=0.005, format="%.3f")
 siarka = st.number_input("Siarka techniczna [%]:", value=0.010, step=0.001, format="%.3f")
