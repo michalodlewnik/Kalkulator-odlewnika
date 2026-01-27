@@ -7,35 +7,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 2. JAVASCRIPT (OBSERWATOR - WYMUSZENIE KLAWIATURY) ---
-st.markdown("""
-    <script>
-    // Funkcja ustawiająca tryb klawiatury
-    function setInputMode() {
-        const inputs = document.querySelectorAll('input[type="number"]');
-        inputs.forEach(input => {
-            // inputmode="decimal" wymusza klawiaturę numeryczną z kropką/przecinkiem
-            input.setAttribute("inputmode", "decimal"); 
-            // pattern pomaga na starszych iOS
-            input.setAttribute("pattern", "[0-9]*");
-        });
-    }
-
-    // Obserwator zmian na stronie (bo Streamlit podmienia elementy w locie)
-    const observer = new MutationObserver((mutations) => {
-        setInputMode();
-    });
-
-    // Start obserwowania całej strony
-    document.addEventListener("DOMContentLoaded", () => {
-        const body = document.querySelector("body");
-        observer.observe(body, { childList: true, subtree: true });
-        setInputMode(); // Odpal raz na start
-    });
-    </script>
-""", unsafe_allow_html=True)
-
-# --- 3. STYLE CSS ---
+# --- 2. STYLE CSS (Czysty wygląd, bez zbędnych skryptów) ---
 st.markdown("""
     <style>
     /* Obniżenie tytułu */
@@ -64,7 +36,7 @@ st.markdown("""
         border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
     }
     
-    /* Karta wyniku Si (Czarna - Identyczna wielkość jak Zielona) */
+    /* Karta wyniku Si (Czarna) */
     .si-box { 
         background-color: #333333; color: #00ff00; padding: 15px; 
         border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
@@ -96,14 +68,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 3.4")
+st.title("🔬 Panel Specjalisty 3.5")
 
-# --- 4. LOGIKA PAMIĘCI ---
+# --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
-# --- 5. ZAKŁADKI ---
+# --- 4. ZAKŁADKI ---
 tab1, tab2 = st.tabs(["⚖️ 1. ZAPRAWA (Mg)", "📊 2. KOREKTA SKŁADU"])
 
 # ==============================================================================
