@@ -10,65 +10,30 @@ st.set_page_config(
 # --- 2. STYLE CSS ---
 st.markdown("""
     <style>
-    /* Obniżenie tytułu */
-    .block-container { 
-        padding-top: 3.5rem !important; 
-        padding-bottom: 3rem !important; 
-    }
-    
-    /* Nagłówki */
+    .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; }
     h1 { color: #00BFFF !important; text-align: center; margin-bottom: 5px !important; font-size: 36px !important; }
     h2 { color: #FFA500 !important; font-size: 24px !important; margin-bottom: 5px !important; }
+    .custom-header { font-size: 22px !important; font-weight: 600 !important; color: white !important; margin-bottom: 10px !important; padding-top: 10px !important; text-align: center; }
     
-    /* Nagłówki sekcji */
-    .custom-header {
-        font-size: 22px !important;
-        font-weight: 600 !important;
-        color: white !important;
-        margin-bottom: 10px !important;
-        padding-top: 10px !important;
-        text-align: center;
-    }
-    
-    /* Karty wyników */
-    .result-box { 
-        background-color: #28a745; color: white; padding: 15px; 
-        border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
-    }
-    
-    /* Karta wyniku Si/CE (Czarna) */
-    .si-box { 
-        background-color: #333333; color: #00ff00; padding: 15px; 
-        border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px;
-        border: 1px solid #444;
-    }
-    
-    /* Styl wartości w wynikach */
+    .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; }
+    .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; border: 1px solid #444; }
     .result-val { font-size: 35px !important; font-weight: 800; display: block; margin-top: 5px;}
     .result-label { font-size: 20px !important; font-weight: 600; text-transform: uppercase; }
     
-    /* Inputy i Suwaki */
     .stNumberInput input { height: 50px !important; font-size: 22px !important; color: #1f77b4 !important; }
     .stSlider [data-baseweb="slider"] { margin-bottom: 5px !important; }
     
-    /* Przycisk Reset */
-    div.stButton > button {
-        background-color: #FFD700 !important; color: black !important;
-        font-size: 20px !important; font-weight: bold !important; border-radius: 12px !important; border: none !important;
-        transition: all 0.1s ease-in-out;
-    }
+    div.stButton > button { background-color: #FFD700 !important; color: black !important; font-size: 20px !important; font-weight: bold !important; border-radius: 12px !important; border: none !important; transition: all 0.1s ease-in-out; }
     div.stButton > button:active { transform: scale(0.95) !important; background-color: #e6c200 !important; }
     
-    /* Zakładki */
     .stTabs [data-baseweb="tab-list"] { gap: 5px; }
     .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #333; border-radius: 10px; color: white; padding: 10px; }
     .stTabs [aria-selected="true"] { background-color: #00BFFF !important; color: black !important; }
-    
     hr { margin-top: 5px !important; margin-bottom: 5px !important; border-color: #555; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 4.1")
+st.title("🔬 Panel Specjalisty 4.3")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -266,34 +231,41 @@ with tab2:
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    st.info("Poniższe wyliczenia bazują na Twojej tabeli technologicznej.")
+    st.info("Dane pobrane bezpośrednio z Twojego pliku Excel.")
 
     # Suwak grubości ścianki
     st.markdown('<div class="custom-header">Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
     grubosc = st.slider("", 5, 100, 15, step=1, label_visibility="collapsed")
 
     # -----------------------------------------------------------------------
-    # ⚙️ KONFIGURACJA DANYCH (TUTAJ WPISZ DANE Z TABELKI)
+    # ⚙️ BAZA DANYCH Z PLIKU EXCEL
+    # Format: (Od_mm, Do_mm, Cel_CE, Cel_C, Cel_Si)
+    # Wygenerowane na podstawie pliku Obliczanie CEL.xlsx
     # -----------------------------------------------------------------------
-    # Format: [Min_mm, Max_mm, Docelowe_CE, Docelowe_C, Docelowe_Si]
-    # Uzupełnij poniższą listę swoimi danymi!
-    tabela_technologiczna = [
-        # Od,  Do,  Cel CE, Cel C, Cel Si
-        (0,   8,   4.60,   3.80,  2.40),
-        (9,   15,  4.50,   3.75,  2.25),
-        (16,  30,  4.40,   3.70,  2.10),
-        (31,  60,  4.30,   3.60,  2.10),
-        (61,  100, 4.20,   3.50,  2.10) 
+    dane_technologiczne = [
+        (0,  7,   4.75, 3.90, 2.70),
+        (8,  12,  4.60, 3.85, 2.40),
+        (13, 17,  4.50, 3.80, 2.30),
+        (18, 22,  4.40, 3.75, 2.10),
+        (23, 27,  4.35, 3.70, 2.10),
+        (28, 32,  4.29, 3.65, 2.10),
+        (33, 37,  4.23, 3.60, 2.00),
+        (38, 42,  4.17, 3.55, 2.00),
+        (43, 47,  4.11, 3.50, 2.00),
+        (48, 52,  4.05, 3.45, 2.00),
+        (53, 57,  4.03, 3.40, 2.00),
+        (58, 62,  4.01, 3.35, 2.10),
+        (63, 100, 3.99, 3.30, 2.20)
     ]
     # -----------------------------------------------------------------------
 
     # Wyszukiwanie odpowiedniego wiersza
-    znaleziono = False
     target_ce = 0
     target_c = 0
     target_si = 0
+    znaleziono = False
 
-    for wiersz in tabela_technologiczna:
+    for wiersz in dane_technologiczne:
         min_g, max_g, ce, c, si = wiersz
         if min_g <= grubosc <= max_g:
             target_ce = ce
@@ -303,15 +275,13 @@ with tab3:
             break
     
     if not znaleziono:
-        st.error("Brak danych dla tej grubości w tabeli!")
+        st.error("Brak danych dla tej grubości! Sprawdź zakresy.")
         target_ce, target_c, target_si = 0, 0, 0
 
-    # Obliczanie tolerancji (+/- 2% dla CE)
-    # Wzór: CE = C + Si/3
-    ce_min = target_ce * 0.98
-    ce_max = target_ce * 1.02
+    # Obliczanie tolerancji (+/- 1% dla CE z Tabeli)
+    ce_min = target_ce * 0.99
+    ce_max = target_ce * 1.01
 
-    # Wyświetlanie wyników
     st.markdown("---")
     
     col_w1, col_w2 = st.columns(2)
@@ -332,10 +302,10 @@ with tab3:
             </div>
         """, unsafe_allow_html=True)
 
-    # Wynik CE z tolerancją
+    # Wynik CE z tolerancją 1%
     st.markdown(f"""
         <div class="si-box">
-            <div class="result-label">CEL: RÓWNOWAŻNIK (CE) <br><span style="font-size: 16px; color: #888;">(Tolerancja +/- 2%)</span></div>
+            <div class="result-label">CEL: RÓWNOWAŻNIK (CE) <br><span style="font-size: 16px; color: #888;">(Tolerancja +/- 1%)</span></div>
             <div class="result-val">{ce_min:.2f} - {ce_max:.2f}</div>
             <div style="font-size: 20px; color: #aaa; margin-top: 5px;">Cel idealny: {target_ce:.2f}</div>
         </div>
