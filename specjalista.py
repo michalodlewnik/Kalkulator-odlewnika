@@ -39,7 +39,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 5.0")
+st.title("🔬 Panel Specjalisty 5.2")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -237,26 +237,30 @@ with tab2:
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    st.info("Ustaw grubość ścianki, a następnie zawęź zakres Si, aby otrzymać wymaganą tolerancję C.")
+    st.info("Algorytm z wygładzoną krzywą spadku CE (brak skoków logicznych).")
 
     st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
-    grubosc = st.slider("", 5, 100, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
+    grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
 
-    # BAZA DANYCH CE
+    # BAZA DANYCH CE (WYGŁADZONA)
+    # Logika: Spadek zwalnia wraz z grubością, zamiast przyspieszać.
     tabela_ce = [
         (0,  7,   4.75),
-        (8,  12,  4.60),
-        (13, 17,  4.50),
-        (18, 22,  4.40),
-        (23, 27,  4.35),
-        (28, 32,  4.29),
-        (33, 37,  4.23),
-        (38, 42,  4.17),
-        (43, 47,  4.11),
-        (48, 52,  4.05),
-        (53, 57,  4.03),
-        (58, 62,  4.01),
-        (63, 100, 3.99)
+        (8,  12,  4.60),  # -0.15
+        (13, 17,  4.50),  # -0.10
+        (18, 22,  4.40),  # -0.10
+        (23, 27,  4.35),  # -0.05
+        (28, 32,  4.30),  # -0.05 (Zamiast 4.29)
+        (33, 37,  4.25),  # -0.05 (Zamiast 4.23)
+        (38, 42,  4.20),  # -0.05 (Zamiast 4.17)
+        (43, 47,  4.16),  # -0.04 (Zwalniamy spadek)
+        (48, 52,  4.12),  # -0.04
+        (53, 57,  4.08),  # -0.04
+        (58, 62,  4.04),  # -0.04
+        (63, 67,  4.01),  # -0.03
+        (68, 72,  3.98),  # -0.03
+        (73, 77,  3.95),  # -0.03
+        (78, 80,  3.93)   # -0.02
     ]
 
     target_ce = 0
@@ -265,25 +269,19 @@ with tab3:
             target_ce = ce
             break
 
-    # SUWAK ZAKRESU SI (2 PUNKTY RUCHOME)
+    # SUWAK ZAKRESU SI
     st.markdown("---")
     st.markdown('<div class="custom-header">2. Planowany zakres Krzemu (Si) [%]:</div>', unsafe_allow_html=True)
     
-    # Range slider zwraca tuplę (min, max)
     si_range = st.slider("", 2.00, 2.90, (2.00, 2.90), step=0.01, label_visibility="collapsed", key="slider_si_range")
     
     si_min_user = si_range[0]
     si_max_user = si_range[1]
 
-    # OBLICZANIE WĘGLA (ODWROTNOŚĆ)
-    # Żeby utrzymać CE przy WYSOKIM krzemie, potrzebujesz NISKIEGO węgla.
-    # Żeby utrzymać CE przy NISKIM krzemie, potrzebujesz WYSOKIEGO węgla.
-    # Wzór: C = CE - Si/3
-    
-    c_lower_bound = target_ce - (si_max_user / 3.0) # To jest min C (dla max Si)
-    c_upper_bound = target_ce - (si_min_user / 3.0) # To jest max C (dla min Si)
+    # OBLICZANIE WĘGLA
+    c_lower_bound = target_ce - (si_max_user / 3.0) 
+    c_upper_bound = target_ce - (si_min_user / 3.0) 
 
-    # Obliczanie tolerancji CE (+/- 1%)
     ce_min = target_ce * 0.99
     ce_max = target_ce * 1.01
 
