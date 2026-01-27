@@ -13,10 +13,15 @@ st.markdown("""
     .block-container { padding-top: 3.5rem !important; padding-bottom: 3rem !important; }
     h1 { color: #00BFFF !important; text-align: center; margin-bottom: 5px !important; font-size: 36px !important; }
     h2 { color: #FFA500 !important; font-size: 24px !important; margin-bottom: 5px !important; }
+    
     .custom-header { font-size: 22px !important; font-weight: 600 !important; color: white !important; margin-bottom: 10px !important; padding-top: 10px !important; text-align: center; }
     
+    /* Wyniki - Zielone (Zakresy) */
     .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; }
+    
+    /* Wynik CE - Czarny */
     .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; border: 1px solid #444; }
+    
     .result-val { font-size: 35px !important; font-weight: 800; display: block; margin-top: 5px;}
     .result-label { font-size: 20px !important; font-weight: 600; text-transform: uppercase; }
     
@@ -33,7 +38,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 4.3")
+st.title("🔬 Panel Specjalisty 4.4")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -44,7 +49,7 @@ if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 tab1, tab2, tab3 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA"])
 
 # ==============================================================================
-# ZAKŁADKA 1: KALKULATOR ZAPRAWY
+# ZAKŁADKA 1: ZAPRAWA
 # ==============================================================================
 with tab1:
     zaprawy_db = {
@@ -118,7 +123,7 @@ with tab1:
 
 
 # ==============================================================================
-# ZAKŁADKA 2: KOREKTA SKŁADU
+# ZAKŁADKA 2: KOREKTA
 # ==============================================================================
 with tab2:
     st.markdown("### 1. Parametry wsadu")
@@ -227,60 +232,54 @@ with tab2:
 
 
 # ==============================================================================
-# ZAKŁADKA 3: ŚCIANKA (DOBÓR SKŁADU)
+# ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE)
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    st.info("Dane pobrane bezpośrednio z Twojego pliku Excel.")
+    st.info("Algorytm wyznacza zakresy C i Si dla wymaganego CE.")
 
-    # Suwak grubości ścianki
     st.markdown('<div class="custom-header">Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
-    grubosc = st.slider("", 5, 100, 15, step=1, label_visibility="collapsed")
+    grubosc = st.slider("", 5, 100, 20, step=1, label_visibility="collapsed")
 
-    # -----------------------------------------------------------------------
-    # ⚙️ BAZA DANYCH Z PLIKU EXCEL
-    # Format: (Od_mm, Do_mm, Cel_CE, Cel_C, Cel_Si)
-    # Wygenerowane na podstawie pliku Obliczanie CEL.xlsx
-    # -----------------------------------------------------------------------
-    dane_technologiczne = [
-        (0,  7,   4.75, 3.90, 2.70),
-        (8,  12,  4.60, 3.85, 2.40),
-        (13, 17,  4.50, 3.80, 2.30),
-        (18, 22,  4.40, 3.75, 2.10),
-        (23, 27,  4.35, 3.70, 2.10),
-        (28, 32,  4.29, 3.65, 2.10),
-        (33, 37,  4.23, 3.60, 2.00),
-        (38, 42,  4.17, 3.55, 2.00),
-        (43, 47,  4.11, 3.50, 2.00),
-        (48, 52,  4.05, 3.45, 2.00),
-        (53, 57,  4.03, 3.40, 2.00),
-        (58, 62,  4.01, 3.35, 2.10),
-        (63, 100, 3.99, 3.30, 2.20)
+    # 1. BAZA DANYCH CE (z pliku Excel)
+    # Mapowanie: Zakres grubości -> CEL CE
+    tabela_ce = [
+        (0,  7,   4.75),
+        (8,  12,  4.60),
+        (13, 17,  4.50),
+        (18, 22,  4.40),
+        (23, 27,  4.35),
+        (28, 32,  4.29),
+        (33, 37,  4.23),
+        (38, 42,  4.17),
+        (43, 47,  4.11),
+        (48, 52,  4.05),
+        (53, 57,  4.03),
+        (58, 62,  4.01),
+        (63, 100, 3.99)
     ]
-    # -----------------------------------------------------------------------
 
-    # Wyszukiwanie odpowiedniego wiersza
     target_ce = 0
-    target_c = 0
-    target_si = 0
-    znaleziono = False
-
-    for wiersz in dane_technologiczne:
-        min_g, max_g, ce, c, si = wiersz
+    for min_g, max_g, ce in tabela_ce:
         if min_g <= grubosc <= max_g:
             target_ce = ce
-            target_c = c
-            target_si = si
-            znaleziono = True
             break
-    
-    if not znaleziono:
-        st.error("Brak danych dla tej grubości! Sprawdź zakresy.")
-        target_ce, target_c, target_si = 0, 0, 0
 
-    # Obliczanie tolerancji (+/- 1% dla CE z Tabeli)
-    ce_min = target_ce * 0.99
-    ce_max = target_ce * 1.01
+    # 2. OBLICZANIE ZAKRESÓW (WSTECZNE)
+    # Zakładamy stały zakres Si: 2.00 - 2.90
+    # Wzór: CE = C + Si/3  =>  C = CE - Si/3
+    
+    si_min_limit = 2.00
+    si_max_limit = 2.90
+    
+    # Najniższy możliwy węgiel (przy najwyższym Si)
+    c_min_calc = target_ce - (si_max_limit / 3.0)
+    # Najwyższy możliwy węgiel (przy najniższym Si)
+    c_max_calc = target_ce - (si_min_limit / 3.0)
+    
+    # Tolerancja wyświetlania CE
+    ce_disp_min = target_ce - 0.05
+    ce_disp_max = target_ce + 0.05
 
     st.markdown("---")
     
@@ -289,24 +288,23 @@ with tab3:
     with col_w1:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">CEL: WĘGIEL (C)</div>
-                <div class="result-val" style="color: orange;">{target_c:.2f} %</div>
+                <div class="result-label">ZAKRES C [%]</div>
+                <div class="result-val" style="color: orange; font-size: 30px !important;">{c_min_calc:.2f} - {c_max_calc:.2f}</div>
             </div>
         """, unsafe_allow_html=True)
         
     with col_w2:
         st.markdown(f"""
             <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">CEL: KRZEM (Si)</div>
-                <div class="result-val" style="color: #00BFFF;">{target_si:.2f} %</div>
+                <div class="result-label">ZAKRES Si [%]</div>
+                <div class="result-val" style="color: #00BFFF; font-size: 30px !important;">{si_min_limit:.2f} - {si_max_limit:.2f}</div>
             </div>
         """, unsafe_allow_html=True)
 
-    # Wynik CE z tolerancją 1%
     st.markdown(f"""
         <div class="si-box">
-            <div class="result-label">CEL: RÓWNOWAŻNIK (CE) <br><span style="font-size: 16px; color: #888;">(Tolerancja +/- 1%)</span></div>
-            <div class="result-val">{ce_min:.2f} - {ce_max:.2f}</div>
-            <div style="font-size: 20px; color: #aaa; margin-top: 5px;">Cel idealny: {target_ce:.2f}</div>
+            <div class="result-label">DOCELOWY RÓWNOWAŻNIK (CE)</div>
+            <div class="result-val">{target_ce:.2f}</div>
+            <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%)</div>
         </div>
     """, unsafe_allow_html=True)
