@@ -7,26 +7,31 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- 2. STYLE CSS (WSPÓLNE DLA OBU ZAKŁADEK) ---
+# --- 2. STYLE CSS (MINIMALISTYCZNE ODSTĘPY) ---
 st.markdown("""
     <style>
-    .block-container { padding-top: 2rem !important; padding-bottom: 5rem !important; }
+    /* Zmniejszenie marginesów strony */
+    .block-container { padding-top: 1rem !important; padding-bottom: 3rem !important; }
     
-    /* Styl nagłówków */
-    h1 { color: #00BFFF !important; text-align: center; padding-bottom: 10px; font-size: 40px !important; }
-    h2 { color: #FFA500 !important; font-size: 28px !important; padding-top: 10px; }
-    h3 { color: white !important; font-size: 22px !important; }
+    /* Nagłówki ściśnięte */
+    h1 { color: #00BFFF !important; text-align: center; padding-bottom: 5px !important; margin-bottom: 5px !important; font-size: 36px !important; }
+    h2 { color: #FFA500 !important; font-size: 24px !important; padding-top: 5px !important; margin-bottom: 5px !important; }
+    h3 { color: white !important; font-size: 20px !important; margin-top: 5px !important; margin-bottom: 5px !important; }
+    
+    /* Zmniejszenie odstępów między elementami */
+    div[data-testid="stExpander"] { margin-bottom: 5px !important; }
+    .stMarkdown { margin-bottom: -5px !important; }
     
     /* Karty wyników */
     .result-box { 
-        background-color: #28a745; color: white; padding: 15px; 
-        border-radius: 10px; text-align: center; margin-bottom: 10px; margin-top: 10px;
+        background-color: #28a745; color: white; padding: 10px; 
+        border-radius: 10px; text-align: center; margin-top: 5px; margin-bottom: 5px;
     }
-    .result-val { font-size: 35px !important; font-weight: 800; }
+    .result-val { font-size: 30px !important; font-weight: 800; }
     
     /* Styl suwaków i inputów */
-    .stNumberInput input { height: 60px !important; font-size: 24px !important; color: #1f77b4 !important; }
-    .stSlider [data-baseweb="slider"] { margin-bottom: 20px; }
+    .stNumberInput input { height: 50px !important; font-size: 22px !important; color: #1f77b4 !important; }
+    .stSlider [data-baseweb="slider"] { margin-bottom: 15px; }
     
     /* Przycisk Reset */
     div.stButton > button {
@@ -36,28 +41,29 @@ st.markdown("""
     }
     
     /* Zakładki */
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { height: 60px; white-space: pre-wrap; background-color: #333; border-radius: 10px; color: white; }
+    .stTabs [data-baseweb="tab-list"] { gap: 5px; }
+    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #333; border-radius: 10px; color: white; padding: 10px; }
     .stTabs [aria-selected="true"] { background-color: #00BFFF !important; color: black !important; }
+    
+    /* Linie podziału */
+    hr { margin-top: 10px !important; margin-bottom: 10px !important; border-color: #555; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 3.0")
+st.title("🔬 Panel Specjalisty 3.1")
 
-# --- 3. LOGIKA PAMIĘCI (ZAPRAWA) ---
+# --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
 if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
-# --- 4. TWORZENIE ZAKŁADEK ---
+# --- 4. ZAKŁADKI ---
 tab1, tab2 = st.tabs(["⚖️ 1. ZAPRAWA (Mg)", "📊 2. KOREKTA SKŁADU"])
 
 # ==============================================================================
-# ZAKŁADKA 1: KALKULATOR ZAPRAWY (TWOJA POPRZEDNIA WERSJA)
+# ZAKŁADKA 1: KALKULATOR ZAPRAWY
 # ==============================================================================
 with tab1:
-    st.header("Modyfikacja i Sferoidyzacja")
-    
     # Baza danych zapraw
     zaprawy_db = {
         "Zap. FeSiMg - VL 63": {"Mg": 6.5, "Si": 0.45},
@@ -96,16 +102,15 @@ with tab1:
     komponent_mg = (target_mg + 0.76 * (siarka - 0.01) + 0.007)
     ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk_custom)) * (temp / 1450)) * 100
 
-    # Suwaki materiałów pomocniczych
     st.markdown("---")
     st.subheader("Materiały pomocnicze:")
+    
     topseed_kg = st.slider("Topseed [Kg]:", 4.0, 12.0, value=st.session_state.topseed_val, step=0.5)
     st.session_state.topseed_val = topseed_kg
     
     kubek_kg = st.slider("Modyfikacja do kubka [Kg]:", 1.0, 6.0, value=st.session_state.kubek_val, step=0.5)
     st.session_state.kubek_val = kubek_kg
 
-    # Przycisk Reset
     if st.button("🔄 RESETUJ SUGEROWANE"):
         st.session_state.topseed_val = domyslny_topseed
         st.session_state.kubek_val = domyslny_kubek
@@ -122,22 +127,16 @@ with tab1:
 
 
 # ==============================================================================
-# ZAKŁADKA 2: KOREKTA SKŁADU CHEMICZNEGO (NOWOŚĆ WG EXCELA)
+# ZAKŁADKA 2: KOREKTA SKŁADU
 # ==============================================================================
 with tab2:
-    st.header("Korekta Składu Chemicznego")
-    
-    # 1. Globalna masa dla korekty (niezależna od zaprawy)
+    # 1. Globalna masa dla korekty
     st.markdown("### 1. Parametry wsadu")
     masa_korekta = st.number_input("Aktualna masa metalu w piecu/kadzi [Kg]:", value=2300, step=50, key="masa_kor")
     
-    # Funkcja licząca dokładny wzór z Excela (z uwzględnieniem rozcieńczenia)
     def oblicz_korkte(masa, obecna, cel, sklad_dodatku):
         if cel == obecna: return 0.0
-        if sklad_dodatku == cel: return 0.0 # Zabezpieczenie przed dzieleniem przez 0
-        
-        # Wzór: Masa * (Cel - Obecna) / (Skład_Dodatku - Cel)
-        # Ten wzór uwzględnia, że dodając materiał zwiększamy masę całkowitą
+        if sklad_dodatku == cel: return 0.0
         wynik = masa * (cel - obecna) / (sklad_dodatku - cel)
         return wynik
 
@@ -147,81 +146,91 @@ with tab2:
     # --- WĘGIEL (C) ---
     with st.expander("⚫ WĘGIEL (C) - Nawęglanie", expanded=False):
         c1, c2, c3 = st.columns(3)
-        obecne_c = c1.number_input("Obecny C [%]:", 3.00, 4.50, 3.64, 0.01, format="%.2f")
-        cel_c = c2.number_input("Cel C [%]:", 3.00, 4.50, 3.70, 0.01, format="%.2f")
-        wsad_c = c3.number_input("C w nawęglaczu [%]:", 50.0, 100.0, 70.0, 1.0) # Wg Excela 70
+        obecne_c = c1.number_input("Obecny C [%]:", 0.00, 5.00, 3.64, 0.01, format="%.2f")
+        cel_c = c2.number_input("Cel C [%]:", 0.00, 5.00, 3.70, 0.01, format="%.2f")
+        wsad_c = c3.number_input("C w dodatku [%]:", 0.0, 100.0, 70.0, 1.0)
         
         if cel_c > obecne_c:
             wynik_c = oblicz_korkte(masa_korekta, obecne_c, cel_c, wsad_c)
             st.markdown(f'<div class="result-box">DODAJ NAWĘGLACZA:<br><span class="result-val">{wynik_c:.2f} kg</span></div>', unsafe_allow_html=True)
         elif cel_c < obecne_c:
-            st.warning("Cel mniejszy niż obecna wartość! Użyj sekcji 'Zbijanie Węgla' poniżej.")
+            st.warning("Cel mniejszy niż obecna! Zjedź niżej do sekcji 'Zbijanie Węgla'.")
         else:
-            st.success("Skład zgodny.")
+            st.success("Skład OK.")
 
     # --- KRZEM (Si) ---
     with st.expander("🪨 KRZEM (Si) - Żelazokrzem", expanded=False):
         s1, s2, s3 = st.columns(3)
-        obecne_si = s1.number_input("Obecny Si [%]:", 0.00, 4.00, 1.80, 0.05, format="%.2f")
-        cel_si = s2.number_input("Cel Si [%]:", 0.00, 4.00, 2.00, 0.05, format="%.2f")
-        wsad_si = s3.number_input("Si w żelazokrzemie [%]:", 40.0, 80.0, 75.0, 1.0) # Wg Excela 75
+        obecne_si = s1.number_input("Obecny Si [%]:", 0.00, 5.00, 1.80, 0.05, format="%.2f")
+        cel_si = s2.number_input("Cel Si [%]:", 0.00, 5.00, 2.00, 0.05, format="%.2f")
+        wsad_si = s3.number_input("Si w dodatku [%]:", 0.0, 100.0, 75.0, 1.0)
         
         if cel_si > obecne_si:
             wynik_si = oblicz_korkte(masa_korekta, obecne_si, cel_si, wsad_si)
             st.markdown(f'<div class="result-box">DODAJ FeSi:<br><span class="result-val">{wynik_si:.2f} kg</span></div>', unsafe_allow_html=True)
         else:
-            st.info("Obecny Krzem jest wyższy lub równy celowi.")
+            st.info("Skład OK (lub za wysoki).")
 
-    # --- INNE STOPY (Cu, Ni, Mo) ---
-    with st.expander("🔩 DODATKI STOPOWE (Cu, Ni, Mo)", expanded=False):
-        tab_cu, tab_ni, tab_mo = st.tabs(["Miedź (Cu)", "Nikiel (Ni)", "Molibden (Mo)"])
+    # --- MIEDŹ (Cu) ---
+    with st.expander("🟠 MIEDŹ (Cu)", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        cu_curr = col1.number_input("Obecna Cu [%]:", 0.00, 2.00, 0.06, 0.01)
+        cu_dest = col2.number_input("Cel Cu [%]:", 0.00, 2.00, 0.72, 0.01)
+        cu_cont = col3.number_input("Cu w dodatku [%]:", 0.0, 100.0, 99.0, 1.0)
         
-        # Miedź
-        with tab_cu:
-            cu_curr = st.number_input("Obecna Cu [%]:", 0.00, 2.00, 0.06, 0.01)
-            cu_dest = st.number_input("Cel Cu [%]:", 0.00, 2.00, 0.72, 0.01)
-            cu_cont = st.number_input("Cu w materiale [%]:", 50.0, 100.0, 99.0, 1.0)
-            if cu_dest > cu_curr:
-                res_cu = oblicz_korkte(masa_korekta, cu_curr, cu_dest, cu_cont)
-                st.markdown(f"**Dodaj Miedzi:** {res_cu:.2f} kg")
+        if cu_dest > cu_curr:
+            res_cu = oblicz_korkte(masa_korekta, cu_curr, cu_dest, cu_cont)
+            st.markdown(f'<div class="result-box">DODAJ MIEDZI:<br><span class="result-val">{res_cu:.2f} kg</span></div>', unsafe_allow_html=True)
+        else:
+            st.success("Skład OK.")
 
-        # Nikiel
-        with tab_ni:
-            ni_curr = st.number_input("Obecny Ni [%]:", 0.00, 5.00, 2.13, 0.01)
-            ni_dest = st.number_input("Cel Ni [%]:", 0.00, 5.00, 2.40, 0.01)
-            ni_cont = st.number_input("Ni w materiale [%]:", 50.0, 100.0, 99.0, 1.0)
-            if ni_dest > ni_curr:
-                res_ni = oblicz_korkte(masa_korekta, ni_curr, ni_dest, ni_cont)
-                st.markdown(f"**Dodaj Niklu:** {res_ni:.2f} kg")
+    # --- NIKIEL (Ni) ---
+    with st.expander("⚪ NIKIEL (Ni)", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        ni_curr = col1.number_input("Obecny Ni [%]:", 0.00, 5.00, 2.13, 0.01)
+        ni_dest = col2.number_input("Cel Ni [%]:", 0.00, 5.00, 2.40, 0.01)
+        ni_cont = col3.number_input("Ni w dodatku [%]:", 0.0, 100.0, 99.0, 1.0)
+        
+        if ni_dest > ni_curr:
+            res_ni = oblicz_korkte(masa_korekta, ni_curr, ni_dest, ni_cont)
+            st.markdown(f'<div class="result-box">DODAJ NIKLU:<br><span class="result-val">{res_ni:.2f} kg</span></div>', unsafe_allow_html=True)
+        else:
+            st.success("Skład OK.")
 
-        # Molibden
-        with tab_mo:
-            mo_curr = st.number_input("Obecny Mo [%]:", 0.00, 5.00, 0.00, 0.01)
-            mo_dest = st.number_input("Cel Mo [%]:", 0.00, 5.00, 0.20, 0.01)
-            mo_cont = st.number_input("Mo w FeMo [%]:", 40.0, 80.0, 69.0, 1.0) # Wg Excela 69
-            if mo_dest > mo_curr:
-                res_mo = oblicz_korkte(masa_korekta, mo_curr, mo_dest, mo_cont)
-                st.markdown(f"**Dodaj FeMo:** {res_mo:.2f} kg")
+    # --- MOLIBDEN (Mo) ---
+    with st.expander("🟣 MOLIBDEN (Mo)", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        mo_curr = col1.number_input("Obecny Mo [%]:", 0.00, 5.00, 0.00, 0.01)
+        mo_dest = col2.number_input("Cel Mo [%]:", 0.00, 5.00, 0.20, 0.01)
+        mo_cont = col3.number_input("Mo w dodatku [%]:", 0.0, 100.0, 69.0, 1.0)
+        
+        if mo_dest > mo_curr:
+            res_mo = oblicz_korkte(masa_korekta, mo_curr, mo_dest, mo_cont)
+            st.markdown(f'<div class="result-box">DODAJ FeMo:<br><span class="result-val">{res_mo:.2f} kg</span></div>', unsafe_allow_html=True)
+        else:
+            st.success("Skład OK.")
 
+    # --- SEPARATOR PRZED ZBIJANIEM ---
+    st.markdown("---")
+    
     # --- ZBIJANIE WĘGLA (STAL) ---
     with st.expander("📉 ZBIJANIE WĘGLA (Dodatek Stali)", expanded=False):
-        st.write("Obliczanie ilości stali potrzebnej do obniżenia węgla.")
-        c_zb_curr = st.number_input("Aktualny Węgiel [%]:", 3.0, 4.5, 3.90, 0.01)
-        c_zb_dest = st.number_input("Cel Węgiel [%]:", 3.0, 4.5, 3.73, 0.01)
-        c_zb_stal = st.number_input("Węgiel w Stali (Złom) [%]:", 0.0, 1.0, 0.10, 0.01)
+        c1, c2, c3 = st.columns(3)
+        c_zb_curr = c1.number_input("Aktualny C [%]:", 0.0, 5.0, 3.90, 0.01, key="czb_cur")
+        c_zb_dest = c2.number_input("Cel C [%]:", 0.0, 5.0, 3.73, 0.01, key="czb_dest")
+        c_zb_stal = c3.number_input("C w Złomie [%]:", 0.0, 2.0, 0.10, 0.01, key="czb_stal")
         
         if c_zb_dest < c_zb_curr:
-            # Tutaj wzór też działa, wynik wyjdzie dodatni bo licznik i mianownik będą ujemne
             res_stal = oblicz_korkte(masa_korekta, c_zb_curr, c_zb_dest, c_zb_stal)
             st.markdown(f'<div class="result-box" style="background-color: #dc3545;">DODAJ STALI:<br><span class="result-val">{res_stal:.1f} kg</span></div>', unsafe_allow_html=True)
         else:
-            st.info("Aktualny węgiel jest niższy niż cel - trzeba nawęglać (Sekcja 1).")
+            st.info("Aby podnieść węgiel, użyj pierwszej sekcji (Nawęglanie).")
 
+    # --- SEPARATOR PRZED MIESZANIEM ---
     st.markdown("---")
     
     # --- MIESZANIE KADZI ---
     with st.expander("🔄 SYMULACJA MIESZANIA (Średnia ważona)", expanded=False):
-        st.write("Oblicz wynikowy skład po zmieszaniu dwóch objętości.")
         col_m1, col_m2 = st.columns(2)
         with col_m1:
             m1_mass = st.number_input("Masa 1 [kg]:", 0, 10000, 1000)
