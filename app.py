@@ -24,6 +24,10 @@ if 'last_masa' not in st.session_state:
 
 st.markdown("""
 
+    <head>
+        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1603/1603847.png">
+    </head>
+    
     <style>
 
     .block-container { padding-top: 3rem !important; padding-bottom: 7rem !important; }
@@ -201,6 +205,7 @@ total_si_inc = si_z_zaprawy + si_z_topseed + si_z_kubka
 st.markdown(f'<div class="result-box"><div style="font-size: 25px;">ILOŚĆ ZAPRAWY</div><div class="result-val">{ilosc_zaprawy:.1f} kg</div></div>', unsafe_allow_html=True)
 
 st.markdown(f'<div class="si-box"><div style="color: white; font-size: 20px;">PRZEWIDYWANY PRZYROST Si Z CAŁEGO ZABIEGU:</div><div style="font-size: 40px; font-weight: 800;">{total_si_inc:.2f} %</div></div>', unsafe_allow_html=True)
+
 
 
 
