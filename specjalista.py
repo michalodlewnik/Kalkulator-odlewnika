@@ -316,115 +316,166 @@ with tab3:
     """, unsafe_allow_html=True)
 
 # ==============================================================================
-# ZAKŁADKA 4: NADLEWY BOCZNE (Kalkulacja ciągła + Jednostki mm)
+# ZAKŁADKA 4: NADLEWY BOCZNE (Kalkulacja ciągła + Jednostki mm + Szyjka)
 # ==============================================================================
 with tab4:
-    st.markdown("### Dobór Nadlewów Bocznych")
-    st.info("Kalkulator sprawdza 3 moduły (odlewu, węzła obj/pow, węzła przekrój/obwód), wybiera największy i wylicza optymalny nadlew (H = 1.5 D).")
+    st.markdown("### Dobór Nadlewów Bocznych i Szyjki")
+    st.info("Kalkulator sprawdza 3 moduły, wybiera największy i wylicza optymalny nadlew (H = 1.5 D). Wyniki modułów podawane są w cm.")
 
-    col_n1, col_n2 = st.columns(2)
+    col_n1, col_n2, col_n3 = st.columns(3)
     
     with col_n1:
-        st.markdown("**Geometria Odlewu**")
-        waga_odl = st.number_input("Waga odlewu [kg]:", value=50.0, step=1.0)
-        v_odl = st.number_input("Objętość odlewu [mm³]:", value=7000000.0, step=10000.0)
-        s_odl = st.number_input("Powierzchnia odlewu [mm²]:", value=200000.0, step=1000.0)
+        st.markdown("**1. Geometria Odlewu**")
+        waga_odl = st.number_input("Waga odlewu [kg]:", value=100.0, step=1.0)
+        v_odl = st.number_input("Objętość odlewu [mm³]:", value=0.0, step=10000.0)
+        s_odl = st.number_input("Powierzchnia odlewu [mm²]:", value=0.0, step=1000.0)
         
-        st.markdown("**Geometria Węzła Cieplnego**")
-        v_wezla = st.number_input("Objętość węzła [mm³]:", value=500000.0, step=1000.0)
-        s_wezla = st.number_input("Powierzchnia węzła [mm²]:", value=25000.0, step=100.0)
-        p_przekroju = st.number_input("Pole przekroju węzła [mm²]:", value=5000.0, step=100.0)
-        obwod_wezla = st.number_input("Obwód węzła [mm]:", value=300.0, step=10.0)
+        st.markdown("**2. Geometria Węzła Cieplnego**")
+        v_wezla = st.number_input("Objętość węzła [mm³]:", value=0.0, step=1000.0)
+        s_wezla = st.number_input("Powierzchnia węzła [mm²]:", value=0.0, step=100.0)
+        p_przekroju = st.number_input("Pole przekroju węzła [mm²]:", value=0.0, step=100.0)
+        obwod_wezla = st.number_input("Obwód węzła [mm]:", value=0.0, step=10.0)
 
     with col_n2:
-        st.markdown("**Parametry Zasilania**")
+        st.markdown("**3. Parametry Zasilania**")
         wsp_bezp = st.selectbox("Współczynnik bezpieczeństwa:", [1.2, 1.25, 1.3], index=0)
         liczba_nadlewow = st.number_input("Ile nadlewów przewidujesz?:", value=2, min_value=1, step=1)
         
         skurcz_obj = st.slider("Skurcz objętościowy (S_obj) [%]:", 1.0, 4.0, 2.0, 0.5)
         wsp_wyssania = st.number_input("Współczynnik wyssania nadlewu (W) [%]:", value=15.0, min_value=1.0, max_value=60.0, step=1.0, help="Dla nadlewu naturalnego w piasku zazwyczaj 14-16%.")
         gestosc_metalu = 7.2  # Gęstość żeliwa kg/dm3
+        
+    with col_n3:
+        st.markdown("**4. Parametry Szyjki**")
+        dict_szyjek = {
+            "Gorący (0.55 * Mw)": 0.55,
+            "Standardowy (0.65 * Mw)": 0.65,
+            "Bezpieczny (0.80 * Mw)": 0.80
+        }
+        wybor_typu_szyjki = st.selectbox("Wybierz współczynnik szyjki:", list(dict_szyjek.keys()), index=1)
+        wsp_szyjki_val = dict_szyjek[wybor_typu_szyjki]
+        wysokosc_szyjki = st.number_input("Wysokość szyjki (h) [mm]:", value=30.0, step=1.0)
     
     st.markdown("---")
     
-    if st.button("🚀 OBLICZ I DOBIERZ NADLEW", use_container_width=True):
+    if st.button("🚀 OBLICZ NADLEW I SZYJKĘ", use_container_width=True):
         # 1. OBLICZANIE WSZYSTKICH 3 MODUŁÓW (wyniki w mm)
         modul_odl_vs = (v_odl / s_odl) if s_odl > 0 else 0
         modul_wezla_vs = (v_wezla / s_wezla) if s_wezla > 0 else 0
         modul_wezla_po = (p_przekroju / obwod_wezla) if obwod_wezla > 0 else 0
         
-        # Słownik do zidentyfikowania, co wygrało
         moduly_dict = {
             "Odlewu (V/S)": modul_odl_vs,
             "Węzła (V/S)": modul_wezla_vs,
             "Węzła (Przekrój/Obwód)": modul_wezla_po
         }
         
-        # System wybiera bezpieczniejszy (największy) moduł
         zwyciezki_typ_modulu = max(moduly_dict, key=moduly_dict.get)
         modul_ostateczny_mm = moduly_dict[zwyciezki_typ_modulu]
         
-        # Wymagany moduł nadlewu w mm
-        modul_nadlewu_wymagany_mm = modul_ostateczny_mm * wsp_bezp
-        
-        # Matematyka walca (H = 1.5 * D) dla warunku Modułu
-        # D [mm] = M_wymagane [mm] / 0.1875
-        D_mm_mod = modul_nadlewu_wymagany_mm / 0.1875
-        
-        # 2. OBLICZENIA MASOWE
-        zapotrzebowanie_calkowite_kg = waga_odl * (skurcz_obj / 100.0)
-        zapotrzebowanie_na_1_nadlew = zapotrzebowanie_calkowite_kg / liczba_nadlewow
-        
-        # Minimalna masa nadlewu wynikająca z fizyki wyssania
-        wymagana_masa_nadlewu_kg = zapotrzebowanie_na_1_nadlew / (wsp_wyssania / 100.0)
-
-        # Wymagana objętość 1 nadlewu w mm³ (gęstość jest w kg/dm³, 1 dm³ = 1 000 000 mm³)
-        V_wymagane_dm3 = wymagana_masa_nadlewu_kg / gestosc_metalu
-        V_wymagane_mm3 = V_wymagane_dm3 * 1000000.0
-        
-        # Objętość V = (1.5 * pi * D^3) / 4. Z tego wyznaczamy D [mm] dla warunku Masy:
-        D_mm_mas = (4.0 * V_wymagane_mm3 / (1.5 * math.pi)) ** (1.0 / 3.0)
-        
-        # 3. DOBÓR FINALNYCH WYMIARÓW
-        D_kalkulowane = max(D_mm_mod, D_mm_mas)
-        
-        # Zaokrąglenie średnicy w górę do pełnych 5 mm (standard rynkowy)
-        D_final = int(math.ceil(D_kalkulowane / 5.0) * 5)
-        
-        # Sztywna reguła H = 1.5 * D
-        H_final = int(1.5 * D_final)
-        
-        # 4. PRZELICZENIE FINALNYCH PARAMETRÓW PO ZAOKRĄGLENIU
-        V_final_mm3 = (math.pi * (D_final ** 2) / 4.0) * H_final
-        M_final_mm = 0.1875 * D_final
-        Waga_final_kg = (V_final_mm3 / 1000000.0) * gestosc_metalu
-        
-        # Sprawdzenie, co windowało gabaryt
-        if D_mm_mod >= D_mm_mas:
-            powod_doboru = "O doborze zadecydował WARUNEK MODUŁU (czas krzepnięcia)."
+        if modul_ostateczny_mm == 0:
+            st.error("Wprowadź poprawne wymiary węzła lub odlewu! Moduł nie może wynosić 0.")
         else:
-            powod_doboru = "O doborze zadecydował WARUNEK MASY (brakowało metalu na skurcz)."
-        
-        # WYPISANIE WYNIKÓW
-        st.markdown(f"<div style='text-align: center; color: #aaa; margin-bottom: 10px;'>Bazowy moduł wyliczono z: <b>{zwyciezki_typ_modulu}</b></div>", unsafe_allow_html=True)
-
-        c_res1, c_res2, c_res3 = st.columns(3)
-        with c_res1:
-            st.metric("Największy Moduł", f"{modul_ostateczny_mm:.1f} mm")
-        with c_res2:
-            st.metric(f"Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany_mm:.1f} mm")
-        with c_res3:
-            st.metric("Wymagana masa (1 szt.)", f"{wymagana_masa_nadlewu_kg:.2f} kg")
+            # Wymagany moduł nadlewu w mm
+            modul_nadlewu_wymagany_mm = modul_ostateczny_mm * wsp_bezp
+            D_mm_mod = modul_nadlewu_wymagany_mm / 0.1875
             
-        st.markdown(f"""
-            <div class="result-box" style="background-color: #007bff; border: 2px solid white;">
-                <div class="result-label">ZALECANY NADLEW</div>
-                <div style="font-size: 24px; font-weight: bold;">
-                    ⌀ {D_final} mm | Wys: {H_final} mm
-                </div>
-                <div style="font-size: 18px; margin-top: 10px;">
-                    Moduł: {M_final_mm:.1f} mm ({M_final_mm/10:.2f} cm) | Waga: ~{Waga_final_kg:.2f} kg
-                </div>
-            </div>
-            <div style="text-align: center; color: #aaa;">{powod_doboru}</div>
-        """, unsafe_allow_html=True)
+            # 2. OBLICZENIA MASOWE
+            zapotrzebowanie_calkowite_kg = waga_odl * (skurcz_obj / 100.0)
+            zapotrzebowanie_na_1_nadlew = zapotrzebowanie_calkowite_kg / liczba_nadlewow
+            wymagana_masa_nadlewu_kg = zapotrzebowanie_na_1_nadlew / (wsp_wyssania / 100.0)
+
+            V_wymagane_dm3 = wymagana_masa_nadlewu_kg / gestosc_metalu
+            V_wymagane_mm3 = V_wymagane_dm3 * 1000000.0
+            
+            D_mm_mas = (4.0 * V_wymagane_mm3 / (1.5 * math.pi)) ** (1.0 / 3.0)
+            
+            # 3. DOBÓR FINALNYCH WYMIARÓW
+            D_kalkulowane = max(D_mm_mod, D_mm_mas)
+            D_final = int(math.ceil(D_kalkulowane / 5.0) * 5)
+            H_final = int(1.5 * D_final)
+            
+            V_final_mm3 = (math.pi * (D_final ** 2) / 4.0) * H_final
+            M_final_mm = 0.1875 * D_final
+            Waga_final_kg = (V_final_mm3 / 1000000.0) * gestosc_metalu
+            
+            if D_mm_mod >= D_mm_mas:
+                powod_doboru = "O doborze zadecydował WARUNEK MODUŁU (czas krzepnięcia)."
+            else:
+                powod_doboru = "O doborze zadecydował WARUNEK MASY (brakowało metalu na skurcz)."
+
+            # 4. OBLICZENIA SZYJKI
+            modul_szyjki_wymagany_mm = modul_ostateczny_mm * wsp_szyjki_val
+            limit_wysokosci = 2 * modul_szyjki_wymagany_mm
+            
+            szyjka_blad = False
+            szerokosc_szyjki_final = 0
+            
+            if wysokosc_szyjki <= limit_wysokosci:
+                szyjka_blad = True
+            else:
+                szerokosc_szyjki = (2 * modul_szyjki_wymagany_mm * wysokosc_szyjki) / (wysokosc_szyjki - 2 * modul_szyjki_wymagany_mm)
+                szerokosc_szyjki_final = int(math.ceil(szerokosc_szyjki))
+            
+            # WYPISANIE WYNIKÓW
+            st.markdown(f"<div style='text-align: center; color: #aaa; margin-bottom: 10px;'>Bazowy moduł wyliczono z: <b>{zwyciezki_typ_modulu}</b></div>", unsafe_allow_html=True)
+
+            c_res1, c_res2, c_res3 = st.columns(3)
+            with c_res1:
+                st.metric("Największy Moduł (Mw)", f"{modul_ostateczny_mm/10:.2f} cm")
+            with c_res2:
+                st.metric(f"Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany_mm/10:.2f} cm")
+            with c_res3:
+                # Rozbudowany i sformatowany tekst pod wymaganą masą
+                st.markdown(f"""
+                    <div style="padding-top: 5px;">
+                        <span style="font-size: 14px; font-weight: 600; color: #aaa; text-transform: uppercase;">Wymagana masa (1 szt.)</span><br>
+                        <span style="font-size: 28px; font-weight: bold; color: white;">{wymagana_masa_nadlewu_kg:.2f} kg</span><br>
+                        <span style="font-size: 12px; color: #00BFFF; line-height: 1.2; display: block; margin-top: 5px;">
+                            (Waga odlewu: {waga_odl} kg x S_obj: {skurcz_obj}% = {zapotrzebowanie_calkowite_kg:.2f} kg skurczu.<br>
+                            Podzielone na {liczba_nadlewow} nadlewy = {zapotrzebowanie_na_1_nadlew:.2f} kg zapotrzebowania.<br>
+                            Wyssanie nadlewu musi być większe niż {wsp_wyssania}% jego całkowitej masy).
+                        </span>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_out1, col_out2 = st.columns(2)
+            
+            with col_out1:
+                st.markdown(f"""
+                    <div class="result-box" style="background-color: #007bff; border: 2px solid white; height: 180px;">
+                        <div class="result-label">ZALECANY NADLEW</div>
+                        <div style="font-size: 26px; font-weight: bold;">
+                            ⌀ {D_final} mm | Wys: {H_final} mm
+                        </div>
+                        <div style="font-size: 16px; margin-top: 10px;">
+                            Moduł: {M_final_mm/10:.2f} cm | Waga: ~{Waga_final_kg:.2f} kg
+                        </div>
+                    </div>
+                    <div style="text-align: center; color: #aaa; font-size:14px;">{powod_doboru}</div>
+                """, unsafe_allow_html=True)
+
+            with col_out2:
+                if szyjka_blad:
+                    st.markdown(f"""
+                        <div class="danger-box" style="height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                            <div class="result-label" style="font-size: 16px;">BŁĄD SZYJKI! ZA NISKA (h={wysokosc_szyjki} mm)</div>
+                            <div style="font-size: 14px; margin-top: 5px;">
+                                Limit dla wyliczonego modułu ({modul_szyjki_wymagany_mm/10:.2f} cm) to minimum {limit_wysokosci:.1f} mm. 
+                                Zwiększ założoną wysokość szyjki.
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div class="result-box" style="background-color: #fd7e14; border: 2px solid white; height: 180px;">
+                            <div class="result-label">ZALECANA SZYJKA</div>
+                            <div style="font-size: 26px; font-weight: bold;">
+                                Wys: {wysokosc_szyjki} mm | Szer: {szerokosc_szyjki_final} mm
+                            </div>
+                            <div style="font-size: 16px; margin-top: 10px;">
+                                Moduł: {modul_szyjki_wymagany_mm/10:.2f} cm
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
