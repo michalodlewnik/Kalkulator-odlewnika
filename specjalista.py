@@ -4,7 +4,7 @@ import streamlit as st
 st.set_page_config(
     page_title="Panel Specjalisty",
     page_icon="🔬",
-    layout="centered"
+    layout="wide"
 )
 
 # --- 2. STYLE CSS ---
@@ -19,6 +19,9 @@ st.markdown("""
     /* Wyniki - Zielone (Zakresy) */
     .result-box { background-color: #28a745; color: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; }
     
+    /* Wyniki - Czerwone (Ostrzeżenia) */
+    .danger-box { background-color: #dc3545; color: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; }
+
     /* Wynik CE - Czarny */
     .si-box { background-color: #333333; color: #00ff00; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; margin-bottom: 10px; border: 1px solid #444; }
     
@@ -33,13 +36,13 @@ st.markdown("""
     div.stButton > button:active { transform: scale(0.95) !important; background-color: #e6c200 !important; }
     
     .stTabs [data-baseweb="tab-list"] { gap: 5px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #333; border-radius: 10px; color: white; padding: 10px; }
-    .stTabs [aria-selected="true"] { background-color: #00BFFF !important; color: black !important; }
+    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: #333; border-radius: 10px; color: white; padding: 10px; font-size: 18px !important; }
+    .stTabs [aria-selected="true"] { background-color: #00BFFF !important; color: black !important; font-weight: bold; }
     hr { margin-top: 5px !important; margin-bottom: 5px !important; border-color: #555; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 5.2")
+st.title("🔬 Panel Specjalisty 6.0")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -47,7 +50,7 @@ if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
 # --- 4. ZAKŁADKI ---
-tab1, tab2, tab3 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA"])
+tab1, tab2, tab3, tab4 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA", "🛢️ 4. NADLEWY"])
 
 # ==============================================================================
 # ZAKŁADKA 1: ZAPRAWA
@@ -243,24 +246,23 @@ with tab3:
     grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
 
     # BAZA DANYCH CE (WYGŁADZONA)
-    # Logika: Spadek zwalnia wraz z grubością, zamiast przyspieszać.
     tabela_ce = [
         (0,  7,   4.75),
-        (8,  12,  4.60),  # -0.15
-        (13, 17,  4.50),  # -0.10
-        (18, 22,  4.40),  # -0.10
-        (23, 27,  4.35),  # -0.05
-        (28, 32,  4.30),  # -0.05 (Zamiast 4.29)
-        (33, 37,  4.25),  # -0.05 (Zamiast 4.23)
-        (38, 42,  4.20),  # -0.05 (Zamiast 4.17)
-        (43, 47,  4.16),  # -0.04 (Zwalniamy spadek)
-        (48, 52,  4.12),  # -0.04
-        (53, 57,  4.08),  # -0.04
-        (58, 62,  4.04),  # -0.04
-        (63, 67,  4.01),  # -0.03
-        (68, 72,  3.98),  # -0.03
-        (73, 77,  3.95),  # -0.03
-        (78, 80,  3.93)   # -0.02
+        (8,  12,  4.60),
+        (13, 17,  4.50),
+        (18, 22,  4.40),
+        (23, 27,  4.35),
+        (28, 32,  4.30),
+        (33, 37,  4.25),
+        (38, 42,  4.20),
+        (43, 47,  4.16),
+        (48, 52,  4.12),
+        (53, 57,  4.08),
+        (58, 62,  4.04),
+        (63, 67,  4.01),
+        (68, 72,  3.98),
+        (73, 77,  3.95),
+        (78, 80,  3.93) 
     ]
 
     target_ce = 0
@@ -313,3 +315,137 @@ with tab3:
             <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%: {ce_min:.2f} - {ce_max:.2f})</div>
         </div>
     """, unsafe_allow_html=True)
+
+# ==============================================================================
+# ZAKŁADKA 4: NADLEWY BOCZNE (Baza: Tabela N1 - N20)
+# ==============================================================================
+with tab4:
+    st.markdown("### Dobór Nadlewów Bocznych z Tabeli N1-N20")
+    st.info("Kalkulator dobiera nadlew weryfikując go na dwa sposoby: poprzez Warunek Modułu (czas krzepnięcia) oraz Bilans Masy (zdolność pokrycia skurczu).")
+
+    # Dane tabeli nadlewów z przesłanego obrazka
+    baza_nadlewow = [
+        {"Typ": "N1", "D": 30, "H": 50, "V_dm3": 0.030, "M_cm": 0.62},
+        {"Typ": "N2", "D": 40, "H": 50, "V_dm3": 0.060, "M_cm": 0.81},
+        {"Typ": "N3", "D": 50, "H": 60, "V_dm3": 0.100, "M_cm": 1.01},
+        {"Typ": "N4", "D": 60, "H": 80, "V_dm3": 0.200, "M_cm": 1.23},
+        {"Typ": "N5", "D": 70, "H": 100, "V_dm3": 0.360, "M_cm": 1.45},
+        {"Typ": "N6", "D": 80, "H": 110, "V_dm3": 0.520, "M_cm": 1.65},
+        {"Typ": "N7", "D": 90, "H": 120, "V_dm3": 0.720, "M_cm": 1.85},
+        {"Typ": "N8", "D": 100, "H": 130, "V_dm3": 0.960, "M_cm": 2.06},
+        {"Typ": "N9", "D": 110, "H": 140, "V_dm3": 1.250, "M_cm": 2.26},
+        {"Typ": "N10", "D": 120, "H": 150, "V_dm3": 1.600, "M_cm": 2.47},
+        {"Typ": "N11", "D": 130, "H": 150, "V_dm3": 1.880, "M_cm": 2.65},
+        {"Typ": "N12", "D": 140, "H": 160, "V_dm3": 2.310, "M_cm": 2.85},
+        {"Typ": "N13", "D": 150, "H": 170, "V_dm3": 2.830, "M_cm": 3.06},
+        {"Typ": "N14", "D": 160, "H": 180, "V_dm3": 3.410, "M_cm": 3.26},
+        {"Typ": "N15", "D": 170, "H": 190, "V_dm3": 4.060, "M_cm": 3.47},
+        {"Typ": "N16", "D": 180, "H": 200, "V_dm3": 4.800, "M_cm": 3.67},
+        {"Typ": "N17", "D": 200, "H": 220, "V_dm3": 6.530, "M_cm": 4.08},
+        {"Typ": "N18", "D": 220, "H": 230, "V_dm3": 8.230, "M_cm": 4.47},
+        {"Typ": "N19", "D": 250, "H": 250, "V_dm3": 11.580, "M_cm": 5.08},
+        {"Typ": "N20", "D": 300, "H": 300, "V_dm3": 20.010, "M_cm": 6.09},
+    ]
+
+    col_n1, col_n2 = st.columns(2)
+    
+    with col_n1:
+        st.markdown("**Geometria Odlewu**")
+        waga_odl = st.number_input("Waga odlewu [kg]:", value=50.0, step=1.0)
+        v_odl = st.number_input("Objętość odlewu [cm3]:", value=7000.0, step=100.0)
+        s_odl = st.number_input("Powierzchnia odlewu [cm2]:", value=2000.0, step=100.0)
+        
+        st.markdown("**Geometria Węzła Cieplnego**")
+        v_wezla = st.number_input("Objętość węzła [cm3]:", value=500.0, step=10.0)
+        s_wezla = st.number_input("Powierzchnia węzła [cm2]:", value=250.0, step=10.0)
+        p_przekroju = st.number_input("Pole przekroju węzła [cm2]:", value=50.0, step=1.0)
+        obwod_wezla = st.number_input("Obwód węzła [cm]:", value=30.0, step=1.0)
+
+    with col_n2:
+        st.markdown("**Parametry Zasilania**")
+        wsp_bezp = st.selectbox("Współczynnik bezpieczeństwa:", [1.2, 1.25, 1.3], index=0)
+        liczba_nadlewow = st.number_input("Ile nadlewów przewidujesz?:", value=2, min_value=1, step=1)
+        
+        skurcz_obj = st.slider("Skurcz objętościowy (S_obj) [%]:", 1.0, 4.0, 2.0, 0.5)
+        wsp_wyssania = st.number_input("Współczynnik wyssania nadlewu (W) [%]:", value=15.0, min_value=1.0, max_value=60.0, step=1.0, help="Dla nadlewu naturalnego w piasku zazwyczaj 14-16%.")
+        gestosc_metalu = 7.2  # Gęstość żeliwa kg/dm3 do przeliczania pojemności z tabeli
+    
+    st.markdown("---")
+    
+    if st.button("🚀 OBLICZ I DOBIERZ NADLEW", use_container_width=True):
+        # 1. OBLICZANIE MODUŁÓW
+        modul_odl_vs = (v_odl / s_odl) if s_odl > 0 else 0
+        modul_wezla_vs = (v_wezla / s_wezla) if s_wezla > 0 else 0
+        modul_wezla_po = (p_przekroju / obwod_wezla) if obwod_wezla > 0 else 0
+        
+        # System wybiera bezpieczniejszy (większy) moduł węzła do obliczeń
+        modul_wezla_ostateczny = max(modul_wezla_vs, modul_wezla_po)
+        
+        # Wymagany moduł nadlewu
+        modul_nadlewu_wymagany = modul_wezla_ostateczny * wsp_bezp
+        
+        # 2. OBLICZENIA MASOWE
+        zapotrzebowanie_calkowite_kg = waga_odl * (skurcz_obj / 100.0)
+        zapotrzebowanie_na_1_nadlew = zapotrzebowanie_calkowite_kg / liczba_nadlewow
+        
+        # Minimalna masa nadlewu wynikająca z fizyki wyssania
+        wymagana_masa_nadlewu_kg = zapotrzebowanie_na_1_nadlew / (wsp_wyssania / 100.0)
+
+        # 3. DOBÓR Z TABELI
+        wybrany_nadlew = None
+        powod_doboru = ""
+
+        for n in baza_nadlewow:
+            masa_nadlewu_z_tabeli = n["V_dm3"] * gestosc_metalu
+            
+            # Warunek 1: Moduł
+            warunek_modulu = n["M_cm"] >= modul_nadlewu_wymagany
+            # Warunek 2: Masa/Pojemność
+            warunek_masy = masa_nadlewu_z_tabeli >= wymagana_masa_nadlewu_kg
+            
+            if warunek_modulu and warunek_masy:
+                wybrany_nadlew = n
+                # Sprawdzamy co było "wąskim gardłem"
+                if warunek_modulu and not (baza_nadlewow[baza_nadlewow.index(n)-1]["M_cm"] >= modul_nadlewu_wymagany if baza_nadlewow.index(n)>0 else True):
+                    powod_doboru = "O doborze zadecydował WARUNEK MODUŁU (czas krzepnięcia)."
+                else:
+                    powod_doboru = "O doborze zadecydował WARUNEK MASY (brakowało metalu na skurcz)."
+                break
+        
+        # Wypisanie wyników
+        c_res1, c_res2, c_res3 = st.columns(3)
+        with c_res1:
+            st.metric("Moduł Węzła (Mw)", f"{modul_wezla_ostateczny:.2f} cm")
+        with c_res2:
+            st.metric(f"Wymagany Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany:.2f} cm")
+        with c_res3:
+            st.metric("Wymagana masa (1 szt.)", f"{wymagana_masa_nadlewu_kg:.2f} kg")
+            
+        if wybrany_nadlew:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #007bff; border: 2px solid white;">
+                    <div class="result-label">ZALECANY NADLEW: {wybrany_nadlew["Typ"]}</div>
+                    <div style="font-size: 22px; font-weight: bold;">
+                        ⌀ {wybrany_nadlew["D"]} mm | Wys: {wybrany_nadlew["H"]} mm
+                    </div>
+                    <div style="font-size: 16px; margin-top: 10px;">
+                        Moduł: {wybrany_nadlew["M_cm"]} cm | Waga: ~{(wybrany_nadlew["V_dm3"] * gestosc_metalu):.2f} kg
+                    </div>
+                </div>
+                <div style="text-align: center; color: #aaa;">{powod_doboru}</div>
+            """, unsafe_allow_html=True)
+            
+            # Podsumowanie zysku metalu
+            masa_ukladu_nadlewow = (wybrany_nadlew["V_dm3"] * gestosc_metalu) * liczba_nadlewow
+            uzysk_odlewu = (waga_odl / (waga_odl + masa_ukladu_nadlewow)) * 100
+            
+            st.info(f"💡 **Ciekawostka Technologiczna:** Łączna waga układu zasilającego wyniesie ok. **{masa_ukladu_nadlewow:.1f} kg**. Przewidywany uzysk metalu w formie (bez układu wlewowego) to **{uzysk_odlewu:.1f}%**.")
+            
+        else:
+            st.markdown(f"""
+                <div class="danger-box">
+                    <div class="result-label">BRAK ODPOWIEDNIEGO NADLEWU W BAZIE!</div>
+                    <div style="font-size: 18px;">Nawet nadlew N20 (M=6.09, Waga=144 kg) jest niewystarczający dla Twoich założeń.</div>
+                    <div style="font-size: 16px; margin-top: 5px;">Rozważ zwiększenie liczby nadlewów lub zastosowanie otulin egzotermicznych (większy współczynnik wyssania W).</div>
+                </div>
+            """, unsafe_allow_html=True)
