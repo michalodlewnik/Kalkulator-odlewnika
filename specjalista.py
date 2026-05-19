@@ -43,7 +43,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 6.1")
+st.title("🔬 Panel Specjalisty 6.2")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -125,7 +125,6 @@ with tab1:
             <div class="result-val">+{total_si_inc:.2f}%</div>
         </div>
     """, unsafe_allow_html=True)
-
 
 # ==============================================================================
 # ZAKŁADKA 2: KOREKTA
@@ -235,7 +234,6 @@ with tab2:
             st.markdown(f"**Wynikowy skład chemiczny:**")
             st.markdown(f'<div style="font-size: 40px; color: yellow; text-align: center; font-weight: bold;">{wynik_mix:.3f} %</div>', unsafe_allow_html=True)
 
-
 # ==============================================================================
 # ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE - SUWAK SI)
 # ==============================================================================
@@ -318,25 +316,25 @@ with tab3:
     """, unsafe_allow_html=True)
 
 # ==============================================================================
-# ZAKŁADKA 4: NADLEWY BOCZNE (Kalkulacja ciągła)
+# ZAKŁADKA 4: NADLEWY BOCZNE (Kalkulacja ciągła + Jednostki mm)
 # ==============================================================================
 with tab4:
     st.markdown("### Dobór Nadlewów Bocznych")
-    st.info("Kalkulator wylicza optymalne wymiary nadlewu (zawsze przyjmując proporcję H = 1.5 D), weryfikując je przez pryzmat Warunku Modułu (czas krzepnięcia) oraz Bilansu Masy (zdolność pokrycia skurczu).")
+    st.info("Kalkulator sprawdza 3 moduły (odlewu, węzła obj/pow, węzła przekrój/obwód), wybiera największy i wylicza optymalny nadlew (H = 1.5 D).")
 
     col_n1, col_n2 = st.columns(2)
     
     with col_n1:
         st.markdown("**Geometria Odlewu**")
         waga_odl = st.number_input("Waga odlewu [kg]:", value=50.0, step=1.0)
-        v_odl = st.number_input("Objętość odlewu [cm3]:", value=7000.0, step=100.0)
-        s_odl = st.number_input("Powierzchnia odlewu [cm2]:", value=2000.0, step=100.0)
+        v_odl = st.number_input("Objętość odlewu [mm³]:", value=7000000.0, step=10000.0)
+        s_odl = st.number_input("Powierzchnia odlewu [mm²]:", value=200000.0, step=1000.0)
         
         st.markdown("**Geometria Węzła Cieplnego**")
-        v_wezla = st.number_input("Objętość węzła [cm3]:", value=500.0, step=10.0)
-        s_wezla = st.number_input("Powierzchnia węzła [cm2]:", value=250.0, step=10.0)
-        p_przekroju = st.number_input("Pole przekroju węzła [cm2]:", value=50.0, step=1.0)
-        obwod_wezla = st.number_input("Obwód węzła [cm]:", value=30.0, step=1.0)
+        v_wezla = st.number_input("Objętość węzła [mm³]:", value=500000.0, step=1000.0)
+        s_wezla = st.number_input("Powierzchnia węzła [mm²]:", value=25000.0, step=100.0)
+        p_przekroju = st.number_input("Pole przekroju węzła [mm²]:", value=5000.0, step=100.0)
+        obwod_wezla = st.number_input("Obwód węzła [mm]:", value=300.0, step=10.0)
 
     with col_n2:
         st.markdown("**Parametry Zasilania**")
@@ -350,22 +348,28 @@ with tab4:
     st.markdown("---")
     
     if st.button("🚀 OBLICZ I DOBIERZ NADLEW", use_container_width=True):
-        # 1. OBLICZANIE MODUŁÓW
+        # 1. OBLICZANIE WSZYSTKICH 3 MODUŁÓW (wyniki w mm)
         modul_odl_vs = (v_odl / s_odl) if s_odl > 0 else 0
         modul_wezla_vs = (v_wezla / s_wezla) if s_wezla > 0 else 0
         modul_wezla_po = (p_przekroju / obwod_wezla) if obwod_wezla > 0 else 0
         
-        # System wybiera bezpieczniejszy (większy) moduł węzła
-        modul_wezla_ostateczny = max(modul_wezla_vs, modul_wezla_po)
+        # Słownik do zidentyfikowania, co wygrało
+        moduly_dict = {
+            "Odlewu (V/S)": modul_odl_vs,
+            "Węzła (V/S)": modul_wezla_vs,
+            "Węzła (Przekrój/Obwód)": modul_wezla_po
+        }
         
-        # Wymagany moduł nadlewu
-        modul_nadlewu_wymagany = modul_wezla_ostateczny * wsp_bezp
+        # System wybiera bezpieczniejszy (największy) moduł
+        zwyciezki_typ_modulu = max(moduly_dict, key=moduly_dict.get)
+        modul_ostateczny_mm = moduly_dict[zwyciezki_typ_modulu]
         
-        # Matematyka walca (H = 1.5 * D)
-        # Moduł V/S dla walca = (pi*D^2/4 * 1.5*D) / (pi*D*1.5*D + 2*pi*D^2/4) = 0.1875 * D
-        # Zatem wymagane D [cm] z warunku modułu:
-        D_cm_mod = modul_nadlewu_wymagany / 0.1875
-        D_mm_mod = D_cm_mod * 10.0
+        # Wymagany moduł nadlewu w mm
+        modul_nadlewu_wymagany_mm = modul_ostateczny_mm * wsp_bezp
+        
+        # Matematyka walca (H = 1.5 * D) dla warunku Modułu
+        # D [mm] = M_wymagane [mm] / 0.1875
+        D_mm_mod = modul_nadlewu_wymagany_mm / 0.1875
         
         # 2. OBLICZENIA MASOWE
         zapotrzebowanie_calkowite_kg = waga_odl * (skurcz_obj / 100.0)
@@ -374,13 +378,12 @@ with tab4:
         # Minimalna masa nadlewu wynikająca z fizyki wyssania
         wymagana_masa_nadlewu_kg = zapotrzebowanie_na_1_nadlew / (wsp_wyssania / 100.0)
 
-        # Wymagana objętość 1 nadlewu
+        # Wymagana objętość 1 nadlewu w mm³ (gęstość jest w kg/dm³, 1 dm³ = 1 000 000 mm³)
         V_wymagane_dm3 = wymagana_masa_nadlewu_kg / gestosc_metalu
-        V_wymagane_cm3 = V_wymagane_dm3 * 1000.0
+        V_wymagane_mm3 = V_wymagane_dm3 * 1000000.0
         
-        # Objętość V = (1.5 * pi * D^3) / 4. Z tego wyznaczamy D [cm] dla masy:
-        D_cm_mas = (4.0 * V_wymagane_cm3 / (1.5 * math.pi)) ** (1.0 / 3.0)
-        D_mm_mas = D_cm_mas * 10.0
+        # Objętość V = (1.5 * pi * D^3) / 4. Z tego wyznaczamy D [mm] dla warunku Masy:
+        D_mm_mas = (4.0 * V_wymagane_mm3 / (1.5 * math.pi)) ** (1.0 / 3.0)
         
         # 3. DOBÓR FINALNYCH WYMIARÓW
         D_kalkulowane = max(D_mm_mod, D_mm_mas)
@@ -392,12 +395,9 @@ with tab4:
         H_final = int(1.5 * D_final)
         
         # 4. PRZELICZENIE FINALNYCH PARAMETRÓW PO ZAOKRĄGLENIU
-        D_final_cm = D_final / 10.0
-        H_final_cm = H_final / 10.0
-        
-        V_final_cm3 = (math.pi * (D_final_cm ** 2) / 4.0) * H_final_cm
-        M_final_cm = 0.1875 * D_final_cm
-        Waga_final_kg = (V_final_cm3 / 1000.0) * gestosc_metalu
+        V_final_mm3 = (math.pi * (D_final ** 2) / 4.0) * H_final
+        M_final_mm = 0.1875 * D_final
+        Waga_final_kg = (V_final_mm3 / 1000000.0) * gestosc_metalu
         
         # Sprawdzenie, co windowało gabaryt
         if D_mm_mod >= D_mm_mas:
@@ -406,11 +406,13 @@ with tab4:
             powod_doboru = "O doborze zadecydował WARUNEK MASY (brakowało metalu na skurcz)."
         
         # WYPISANIE WYNIKÓW
+        st.markdown(f"<div style='text-align: center; color: #aaa; margin-bottom: 10px;'>Bazowy moduł wyliczono z: <b>{zwyciezki_typ_modulu}</b></div>", unsafe_allow_html=True)
+
         c_res1, c_res2, c_res3 = st.columns(3)
         with c_res1:
-            st.metric("Moduł Węzła (Mw)", f"{modul_wezla_ostateczny:.2f} cm")
+            st.metric("Największy Moduł", f"{modul_ostateczny_mm:.1f} mm")
         with c_res2:
-            st.metric(f"Wymagany Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany:.2f} cm")
+            st.metric(f"Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany_mm:.1f} mm")
         with c_res3:
             st.metric("Wymagana masa (1 szt.)", f"{wymagana_masa_nadlewu_kg:.2f} kg")
             
@@ -421,7 +423,7 @@ with tab4:
                     ⌀ {D_final} mm | Wys: {H_final} mm
                 </div>
                 <div style="font-size: 18px; margin-top: 10px;">
-                    Moduł: {M_final_cm:.2f} cm | Waga: ~{Waga_final_kg:.2f} kg
+                    Moduł: {M_final_mm:.1f} mm ({M_final_mm/10:.2f} cm) | Waga: ~{Waga_final_kg:.2f} kg
                 </div>
             </div>
             <div style="text-align: center; color: #aaa;">{powod_doboru}</div>
