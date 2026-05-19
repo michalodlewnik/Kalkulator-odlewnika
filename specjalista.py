@@ -239,7 +239,7 @@ with tab2:
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    st.info("Algorytm z wygładzoną krzywą spadku CE (brak skoków logicznych).")
+    
 
     st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
     grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
@@ -320,7 +320,7 @@ with tab3:
 # ==============================================================================
 with tab4:
     st.markdown("### Dobór Nadlewów Bocznych i Szyjki")
-    st.info("Kalkulator sprawdza 3 moduły, wybiera największy i wylicza optymalny nadlew (H = 1.5 D). Wyniki modułów podawane są w cm.")
+
 
     col_n1, col_n2, col_n3 = st.columns(3)
     
