@@ -239,7 +239,7 @@ with tab2:
 # ==============================================================================
 with tab3:
     st.markdown("### Dobór parametrów do ścianki")
-    
+    st.info("Algorytm z wygładzoną krzywą spadku CE (brak skoków logicznych).")
 
     st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
     grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
@@ -320,7 +320,7 @@ with tab3:
 # ==============================================================================
 with tab4:
     st.markdown("### Dobór Nadlewów Bocznych i Szyjki")
-
+    st.info("Kalkulator sprawdza 3 moduły, wybiera największy i wylicza optymalny nadlew (H = 1.5 D). Wyniki modułów podawane są w cm.")
 
     col_n1, col_n2, col_n3 = st.columns(3)
     
@@ -404,7 +404,7 @@ with tab4:
             else:
                 powod_doboru = "O doborze zadecydował WARUNEK MASY (brakowało metalu na skurcz)."
 
-            # 4. OBLICZENIA SZYJKI
+            # 4. OBLICZENIA SZYJKI I ODLEGŁOŚCI
             modul_szyjki_wymagany_mm = modul_ostateczny_mm * wsp_szyjki_val
             limit_wysokosci = 2 * modul_szyjki_wymagany_mm
             
@@ -416,6 +416,13 @@ with tab4:
             else:
                 szerokosc_szyjki = (2 * modul_szyjki_wymagany_mm * wysokosc_szyjki) / (wysokosc_szyjki - 2 * modul_szyjki_wymagany_mm)
                 szerokosc_szyjki_final = int(math.ceil(szerokosc_szyjki))
+                
+            # Wyliczenie odległości (L) oraz odległości od osi
+            L_min = int(math.ceil(2 * modul_ostateczny_mm))
+            L_max = int(math.ceil(3 * modul_ostateczny_mm))
+            promien_nadlewu = D_final / 2.0
+            os_min = int(math.ceil(L_min + promien_nadlewu))
+            os_max = int(math.ceil(L_max + promien_nadlewu))
             
             # WYPISANIE WYNIKÓW
             st.markdown(f"<div style='text-align: center; color: #aaa; margin-bottom: 10px;'>Bazowy moduł wyliczono z: <b>{zwyciezki_typ_modulu}</b></div>", unsafe_allow_html=True)
@@ -440,26 +447,26 @@ with tab4:
                 """, unsafe_allow_html=True)
                 
             st.markdown("<br>", unsafe_allow_html=True)
-            col_out1, col_out2 = st.columns(2)
+            col_out1, col_out2, col_out3 = st.columns(3)
             
             with col_out1:
                 st.markdown(f"""
-                    <div class="result-box" style="background-color: #007bff; border: 2px solid white; height: 180px;">
+                    <div class="result-box" style="background-color: #007bff; border: 2px solid white; height: 190px; display: flex; flex-direction: column; justify-content: center;">
                         <div class="result-label">ZALECANY NADLEW</div>
-                        <div style="font-size: 26px; font-weight: bold;">
+                        <div style="font-size: 24px; font-weight: bold;">
                             ⌀ {D_final} mm | Wys: {H_final} mm
                         </div>
-                        <div style="font-size: 16px; margin-top: 10px;">
+                        <div style="font-size: 15px; margin-top: 10px;">
                             Moduł: {M_final_mm/10:.2f} cm | Waga: ~{Waga_final_kg:.2f} kg
                         </div>
                     </div>
-                    <div style="text-align: center; color: #aaa; font-size:14px;">{powod_doboru}</div>
+                    <div style="text-align: center; color: #aaa; font-size:13px;">{powod_doboru}</div>
                 """, unsafe_allow_html=True)
 
             with col_out2:
                 if szyjka_blad:
                     st.markdown(f"""
-                        <div class="danger-box" style="height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                        <div class="danger-box" style="height: 190px; display: flex; flex-direction: column; justify-content: center;">
                             <div class="result-label" style="font-size: 16px;">BŁĄD SZYJKI! ZA NISKA (h={wysokosc_szyjki} mm)</div>
                             <div style="font-size: 14px; margin-top: 5px;">
                                 Limit dla wyliczonego modułu ({modul_szyjki_wymagany_mm/10:.2f} cm) to minimum {limit_wysokosci:.1f} mm. 
@@ -469,13 +476,27 @@ with tab4:
                     """, unsafe_allow_html=True)
                 else:
                     st.markdown(f"""
-                        <div class="result-box" style="background-color: #fd7e14; border: 2px solid white; height: 180px;">
+                        <div class="result-box" style="background-color: #fd7e14; border: 2px solid white; height: 190px; display: flex; flex-direction: column; justify-content: center;">
                             <div class="result-label">ZALECANA SZYJKA</div>
-                            <div style="font-size: 26px; font-weight: bold;">
+                            <div style="font-size: 24px; font-weight: bold;">
                                 Wys: {wysokosc_szyjki} mm | Szer: {szerokosc_szyjki_final} mm
                             </div>
-                            <div style="font-size: 16px; margin-top: 10px;">
+                            <div style="font-size: 15px; margin-top: 10px;">
                                 Moduł: {modul_szyjki_wymagany_mm/10:.2f} cm
                             </div>
                         </div>
                     """, unsafe_allow_html=True)
+                    
+            with col_out3:
+                st.markdown(f"""
+                    <div class="result-box" style="background-color: #6f42c1; border: 2px solid white; height: 190px; display: flex; flex-direction: column; justify-content: center;">
+                        <div class="result-label" style="font-size: 16px;">ODLEGŁOŚĆ ODLEWU</div>
+                        <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">
+                            Długość Szyjki (L):<br> {L_min} - {L_max} mm
+                        </div>
+                        <hr style="border-top: 1px dashed white; margin: 8px 0;">
+                        <div style="font-size: 16px; font-weight: bold;">
+                            Od osi nadlewu:<br> {os_min} - {os_max} mm
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
