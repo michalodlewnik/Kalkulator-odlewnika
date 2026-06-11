@@ -43,7 +43,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 6.5")
+st.title("🔬 Panel Specjalisty 6.6")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -111,10 +111,10 @@ with tab1:
     si_z_zaprawy = (ilosc_zaprawy * si_sklad_zap) / masa * 100
     si_z_kubka = (kubek_kg * 0.7496) / masa * 100
     
-    # Warunek wykluczający Topseed dla zaprawy NiMg16
+    # Wykluczenie Topseedu dla zaprawy NiMg16
     if wybrana == "Zap. NiMg16":
         si_z_topseed = 0.0
-        st.info("💡 Przy zaprawie NiMg16 pominięto dodatek Topseed w kalkulacji krzemu.")
+        st.info("💡 Przy zaprawie NiMg16 system automatycznie pomija dodatek Topseed w kalkulacji całkowitego krzemu (Si).")
     else:
         si_z_topseed = (topseed_kg * 0.485) / masa * 100
         
@@ -243,85 +243,179 @@ with tab2:
             st.markdown(f'<div style="font-size: 40px; color: yellow; text-align: center; font-weight: bold;">{wynik_mix:.3f} %</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE - SUWAK SI)
+# ZAKŁADKA 3: ŚCIANKA (OKNO TECHNOLOGICZNE - SUWAK SI) - ZINTEGROWANA (GJS/GJL)
 # ==============================================================================
 with tab3:
-    st.markdown("### Dobór parametrów do ścianki")
-    st.info("Algorytm z wygładzoną krzywą spadku CE (brak skoków logicznych).")
-
-    st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
-    grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
-
-    # BAZA DANYCH CE (WYGŁADZONA)
-    tabela_ce = [
-        (0,  7,   4.75),
-        (8,  12,  4.60),
-        (13, 17,  4.50),
-        (18, 22,  4.40),
-        (23, 27,  4.35),
-        (28, 32,  4.30),
-        (33, 37,  4.25),
-        (38, 42,  4.20),
-        (43, 47,  4.16),
-        (48, 52,  4.12),
-        (53, 57,  4.08),
-        (58, 62,  4.04),
-        (63, 67,  4.01),
-        (68, 72,  3.98),
-        (73, 77,  3.95),
-        (78, 80,  3.93) 
-    ]
-
-    target_ce = 0
-    for min_g, max_g, ce in tabela_ce:
-        if min_g <= grubosc <= max_g:
-            target_ce = ce
-            break
-
-    # SUWAK ZAKRESU SI
+    rodzaj_zeliwa_scianka = st.radio(
+        "Wybierz rodzaj żeliwa do analizy ścianki:", 
+        ["🟢 Żeliwo Sferoidalne (GJS)", "⚪ Żeliwo Szare (GJL)"], 
+        horizontal=True
+    )
     st.markdown("---")
-    st.markdown('<div class="custom-header">2. Planowany zakres Krzemu (Si) [%]:</div>', unsafe_allow_html=True)
-    
-    si_range = st.slider("", 2.00, 2.90, (2.00, 2.90), step=0.01, label_visibility="collapsed", key="slider_si_range")
-    
-    si_min_user = si_range[0]
-    si_max_user = si_range[1]
 
-    # OBLICZANIE WĘGLA
-    c_lower_bound = target_ce - (si_max_user / 3.0) 
-    c_upper_bound = target_ce - (si_min_user / 3.0) 
+    if rodzaj_zeliwa_scianka == "🟢 Żeliwo Sferoidalne (GJS)":
+        st.markdown("### Dobór parametrów do ścianki (SFERO)")
+        st.info("Algorytm z wygładzoną krzywą spadku CE (brak skoków logicznych).")
 
-    ce_min = target_ce * 0.99
-    ce_max = target_ce * 1.01
+        st.markdown('<div class="custom-header">1. Grubość ścianki odlewu [mm]:</div>', unsafe_allow_html=True)
+        grubosc = st.slider("", 5, 80, 20, step=1, label_visibility="collapsed", key="slider_grubosc")
 
-    st.markdown("---")
-    
-    # WYNIKI
-    col_w1, col_w2 = st.columns(2)
-    
-    with col_w1:
-        st.markdown(f"""
-            <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">WYMAGANY WĘGIEL (C)</div>
-                <div class="result-val" style="color: orange; font-size: 30px !important;">{c_lower_bound:.2f} - {c_upper_bound:.2f}</div>
-            </div>
-        """, unsafe_allow_html=True)
+        # BAZA DANYCH CE (WYGŁADZONA)
+        tabela_ce = [
+            (0,  7,   4.75),
+            (8,  12,  4.60),
+            (13, 17,  4.50),
+            (18, 22,  4.40),
+            (23, 27,  4.35),
+            (28, 32,  4.30),
+            (33, 37,  4.25),
+            (38, 42,  4.20),
+            (43, 47,  4.16),
+            (48, 52,  4.12),
+            (53, 57,  4.08),
+            (58, 62,  4.04),
+            (63, 67,  4.01),
+            (68, 72,  3.98),
+            (73, 77,  3.95),
+            (78, 80,  3.93) 
+        ]
+
+        target_ce = 0
+        for min_g, max_g, ce in tabela_ce:
+            if min_g <= grubosc <= max_g:
+                target_ce = ce
+                break
+
+        # SUWAK ZAKRESU SI
+        st.markdown("---")
+        st.markdown('<div class="custom-header">2. Planowany zakres Krzemu (Si) [%]:</div>', unsafe_allow_html=True)
         
-    with col_w2:
+        si_range = st.slider("", 2.00, 2.90, (2.00, 2.90), step=0.01, label_visibility="collapsed", key="slider_si_range")
+        
+        si_min_user = si_range[0]
+        si_max_user = si_range[1]
+
+        # OBLICZANIE WĘGLA
+        c_lower_bound = target_ce - (si_max_user / 3.0) 
+        c_upper_bound = target_ce - (si_min_user / 3.0) 
+
+        ce_min = target_ce * 0.99
+        ce_max = target_ce * 1.01
+
+        st.markdown("---")
+        
+        # WYNIKI GJS
+        col_w1, col_w2 = st.columns(2)
+        with col_w1:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #333; border: 1px solid white;">
+                    <div class="result-label">WYMAGANY WĘGIEL (C)</div>
+                    <div class="result-val" style="color: orange; font-size: 30px !important;">{c_lower_bound:.2f} - {c_upper_bound:.2f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        with col_w2:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #333; border: 1px solid white;">
+                    <div class="result-label">WYBRANY KRZEM (Si)</div>
+                    <div class="result-val" style="color: #00BFFF; font-size: 30px !important;">{si_min_user:.2f} - {si_max_user:.2f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
         st.markdown(f"""
-            <div class="result-box" style="background-color: #333; border: 1px solid white;">
-                <div class="result-label">WYBRANY KRZEM (Si)</div>
-                <div class="result-val" style="color: #00BFFF; font-size: 30px !important;">{si_min_user:.2f} - {si_max_user:.2f}</div>
+            <div class="si-box">
+                <div class="result-label">DOCELOWY RÓWNOWAŻNIK (CE)</div>
+                <div class="result-val">{target_ce:.2f}</div>
+                <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%: {ce_min:.2f} - {ce_max:.2f})</div>
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown(f"""
-        <div class="si-box">
-            <div class="result-label">DOCELOWY RÓWNOWAŻNIK (CE)</div>
-            <div class="result-val">{target_ce:.2f}</div>
-            <div style="font-size: 16px; color: #888; margin-top: 5px;">(Tolerancja +/- 1%: {ce_min:.2f} - {ce_max:.2f})</div>
-        </div>
-    """, unsafe_allow_html=True)
+    else:
+        # ---------------- LOGIKA GJL (SZARE) ----------------
+        st.markdown("### Kalkulator Technologiczny GJL + Perlit")
+        
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            dict_gjl = {
+                "EN-GJL-150": 4.450,
+                "EN-GJL-200": 4.250,
+                "EN-GJL-250": 4.100,
+                "EN-GJL-300": 3.900
+            }
+            wybrany_gjl = st.selectbox("Gatunek:", list(dict_gjl.keys()), index=2)
+            
+        with col_g2:
+            grubosc_gjl = st.slider("Ścianka [mm]:", 5, 80, 20, step=1)
+            
+        st.markdown("#### Skład bazowy (Si)")
+        si_range_gjl = st.slider("Zakres Krzemu (Si) [%]:", 1.00, 3.00, (1.80, 2.10), step=0.01)
+        si_min_gjl, si_max_gjl = si_range_gjl[0], si_range_gjl[1]
+        
+        st.markdown("#### Stabilizatory Perlitu i Balans Mn/S")
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            s_val = st.number_input("Siarka (S) [%]:", value=0.050, step=0.005, min_value=0.010, format="%.3f")
+        with col_m2:
+            mn_val = st.number_input("Mangan (Mn) [%]:", value=0.50, step=0.01)
+        with col_m3:
+            cu_val = st.slider("Miedź (Cu) [%]:", 0.00, 1.00, 0.00, step=0.05)
+            
+        # OBLICZENIA GJL
+        base_ce = dict_gjl[wybrany_gjl]
+        multiplier = math.floor((grubosc_gjl - 5) / 5)
+        target_ce_gjl = base_ce - (multiplier * 0.025)
+        
+        c_low_gjl = target_ce_gjl - (si_max_gjl / 3.0)
+        c_up_gjl = target_ce_gjl - (si_min_gjl / 3.0)
+        
+        ratio_mn_s = mn_val / s_val
+        min_mn_required = (1.7 * s_val) + 0.3
+        
+        # Generowanie Porady
+        num_class = int(wybrany_gjl.split('-')[-1])
+        advice_text = f"Dla grubości {grubosc_gjl} mm i klasy {num_class}:<br>"
+        
+        if mn_val < min_mn_required:
+            advice_text += f"<span style='color: #ff4b4b; font-weight:bold;'>PODNIEŚ MANGAN!</span> Min. sugerowany dla S={s_val:.3f}% to <b>{min_mn_required:.2f}%</b>.<br>"
+        else:
+            advice_text += "<span style='color: #00ffaa;'>Balans Mn/S poprawny.</span><br>"
+            
+        if num_class >= 250 and cu_val < 0.2:
+            advice_text += "Dla tej klasy zalecany dodatek Cu (0.2 - 0.5%) dla stabilizacji perlitu."
+
+        # Kolory wskaźników
+        mn_color = "#00ffaa" if ratio_mn_s >= 1.7 else "#ff4b4b"
+        
+        st.markdown("---")
+        
+        # WYNIKI GJL
+        col_out1, col_out2, col_out3 = st.columns(3)
+        with col_out1:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #1e2128; border-top: 3px solid #ffaa00; border-radius: 8px;">
+                    <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase;">Wymagany Węgiel (C)</div>
+                    <div style="font-size: 1.8em; font-weight: bold; color: #ffaa00;">{c_low_gjl:.3f} - {c_up_gjl:.3f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        with col_out2:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #1e2128; border-top: 3px solid #00bfff; border-radius: 8px;">
+                    <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase;">Docelowy CE</div>
+                    <div style="font-size: 1.8em; font-weight: bold; color: white;">{target_ce_gjl:.3f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        with col_out3:
+            st.markdown(f"""
+                <div class="result-box" style="background-color: #1e2128; border-top: 3px solid {mn_color}; border-radius: 8px;">
+                    <div style="font-size: 0.75em; color: #aaa; text-transform: uppercase;">Stosunek Mn / S</div>
+                    <div style="font-size: 1.8em; font-weight: bold; color: {mn_color};">{ratio_mn_s:.2f}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+            <div class="result-box" style="background: rgba(0, 255, 170, 0.05); border: 1px solid #444; border-radius: 8px; text-align: left; padding: 15px;">
+                <div style="font-size: 0.9em; color: #ccc;">{advice_text}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 # ==============================================================================
 # ZAKŁADKA 4: NADLEWY BOCZNE (Kalkulacja ciągła + Jednostki mm + Szyjka)
