@@ -43,7 +43,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🔬 Panel Specjalisty 6.2")
+st.title("🔬 Panel Specjalisty 6.3")
 
 # --- 3. LOGIKA PAMIĘCI ---
 if 'topseed_val' not in st.session_state: st.session_state.topseed_val = 8.5
@@ -51,7 +51,7 @@ if 'kubek_val' not in st.session_state: st.session_state.kubek_val = 4.0
 if 'last_masa' not in st.session_state: st.session_state.last_masa = 1100.0
 
 # --- 4. ZAKŁADKI ---
-tab1, tab2, tab3, tab4 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA", "🛢️ 4. NADLEWY"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚖️ 1. ZAPRAWA", "📊 2. KOREKTA", "🧱 3. ŚCIANKA", "🛢️ 4. NADLEWY", "⚙️ 5. FILTRY"])
 
 # ==============================================================================
 # ZAKŁADKA 1: ZAPRAWA
@@ -433,7 +433,6 @@ with tab4:
             with c_res2:
                 st.metric(f"Moduł Nadlewu (x{wsp_bezp})", f"{modul_nadlewu_wymagany_mm/10:.2f} cm")
             with c_res3:
-                # Rozbudowany i sformatowany tekst pod wymaganą masą
                 st.markdown(f"""
                     <div style="padding-top: 5px;">
                         <span style="font-size: 14px; font-weight: 600; color: #aaa; text-transform: uppercase;">Wymagana masa (1 szt.)</span><br>
@@ -500,3 +499,142 @@ with tab4:
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+
+# ==============================================================================
+# ZAKŁADKA 5: FILTRY (Zintegrowany System OPSA)
+# ==============================================================================
+with tab5:
+    st.markdown("### Zintegrowany System Obliczeniowy (OPSA)")
+    
+    col_f1, col_f2 = st.columns(2)
+    
+    with col_f1:
+        st.markdown("#### 1. Parametry Formy (Wymagania)")
+        iron_type = st.selectbox("Rodzaj żeliwa:", ["Sferoidalne (GJS)", "Szare (GJL)"])
+        mass_f = st.slider("Masa brutto (detal + układ) [kg]:", 5.0, 400.0, 100.0, 1.0)
+        
+        thick_opts = ["Cienkie (< 8 mm)", "Średnie (8 - 15 mm)", "Pogrubione (15 - 30 mm)", "Masywne (> 30 mm)"]
+        thick_idx = thick_opts.index(st.selectbox("Przeważająca grubość ścianki:", thick_opts, index=1))
+        
+    with col_f2:
+        st.markdown("#### 2. Układ Filtrujący (Możliwości)")
+        filter_opts = ["50x50", "50x75", "60x60", "75x75", "100x100", "150x150"]
+        filter_size = st.selectbox("Wymiar filtra [mm]:", filter_opts, index=4)
+        count = st.slider("Liczba filtrów [szt.]:", 1, 6, 1, 1)
+        
+        ppi_opts = [10, 20, 30]
+        ppi = st.select_slider("Gęstość (PPI):", options=ppi_opts, value=10)
+
+    if st.button("🚀 OBLICZ FILTRY", use_container_width=True):
+        # --- OBLICZENIA POPYTU (FORMA) ---
+        is_sfero = (iron_type == "Sferoidalne (GJS)")
+        k_arr = [1.1, 1.3, 1.5, 1.8] if is_sfero else [1.3, 1.5, 1.8, 2.2]
+        k_val = k_arr[thick_idx]
+        
+        req_time = k_val * math.sqrt(mass_f)
+        req_flow = mass_f / req_time if req_time > 0 else 0
+        
+        # --- OBLICZENIA PODAŻY (FILTR) ---
+        dims = filter_size.split('x')
+        area_cm2 = (int(dims[0]) * int(dims[1])) / 100.0
+        total_area = area_cm2 * count
+        
+        if is_sfero:
+            cap_factor = 1.15 if ppi == 10 else (0.8 if ppi == 20 else 0.5)
+        else:
+            cap_factor = 2.5 if ppi == 10 else (1.5 if ppi == 20 else 1.0)
+            
+        flow_factor = 0.12 if ppi == 10 else (0.08 if ppi == 20 else 0.04)
+        
+        filter_cap = total_area * cap_factor
+        filter_flow = total_area * flow_factor
+        
+        # --- ZDERZENIE LOGIKI I WERDYKT ---
+        flow_ok = filter_flow >= req_flow
+        mass_ok = filter_cap >= mass_f
+        
+        if not flow_ok and not mass_ok:
+            v_class = "danger-box"
+            v_text = "KATASTROFA: DŁAWIENIE STRUGI + ZATKANIE FILTRA"
+        elif not flow_ok:
+            v_class = "danger-box"
+            v_text = "BŁĄD: FILTR DŁAWI STRUGĘ (RYZYKO NIEDOLAŃ)"
+        elif not mass_ok:
+            v_class = "danger-box"
+            v_text = "BŁĄD: PRZEKROCZONA POJEMNOŚĆ (RYZYKO ZATKANIA)"
+        else:
+            v_class = "result-box"
+            v_text = "UKŁAD BEZPIECZNY - MOŻNA ZALEWAĆ"
+            
+        # WYŚWIETLENIE WERDYKTU
+        st.markdown(f'<div class="{v_class}" style="font-size:22px; font-weight:bold;">{v_text}</div>', unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # KARTY METRYK
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        
+        with col_m1:
+            st.markdown(f"""
+                <div style="background: #252525; padding: 15px; border-radius: 6px; text-align: center; border-left: 4px solid #2196F3;">
+                    <div style="font-size: 0.8em; color: #888; text-transform: uppercase;">Czas Zalewania</div>
+                    <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #64b5f6;">{req_time:.1f} s</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with col_m2:
+            st.markdown(f"""
+                <div style="background: #252525; padding: 15px; border-radius: 6px; text-align: center; border-left: 4px solid #2196F3;">
+                    <div style="font-size: 0.8em; color: #888; text-transform: uppercase;">Wymagany Przepływ</div>
+                    <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #64b5f6;">{req_flow:.1f} kg/s</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with col_m3:
+            st.markdown(f"""
+                <div style="background: #252525; padding: 15px; border-radius: 6px; text-align: center; border-left: 4px solid #ff9800;">
+                    <div style="font-size: 0.8em; color: #888; text-transform: uppercase;">Max. Pojemność</div>
+                    <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #ffb74d;">{filter_cap:.0f} kg</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with col_m4:
+            st.markdown(f"""
+                <div style="background: #252525; padding: 15px; border-radius: 6px; text-align: center; border-left: 4px solid #ff9800;">
+                    <div style="font-size: 0.8em; color: #888; text-transform: uppercase;">Max. Przepływ</div>
+                    <div style="font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #ffb74d;">{filter_flow:.1f} kg/s</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ZDERZENIE LOGIKI
+        st.markdown("#### Zderzenie Logiki (Popyt vs Podaż)")
+        
+        flow_icon = "✅" if flow_ok else "❌"
+        flow_op = "≤" if flow_ok else ">"
+        
+        mass_icon = "✅" if mass_ok else "❌"
+        mass_op = "≤" if mass_ok else ">"
+
+        st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333;">
+                <div style="font-weight: bold; color: #ccc; width: 30%;">1. Weryfikacja Przepływu (Czasu)</div>
+                <div style="display: flex; align-items: center; width: 70%; justify-content: space-around; font-family: monospace; font-size: 1.2em;">
+                    <span style="color:#64b5f6;">{req_flow:.1f} kg/s</span>
+                    <span style="font-weight: bold; color: #fff; padding: 0 15px;">{flow_op}</span>
+                    <span style="color:#ffb74d;">{filter_flow:.1f} kg/s</span>
+                    <span style="font-size: 1.5em;">{flow_icon}</span>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333;">
+                <div style="font-weight: bold; color: #ccc; width: 30%;">2. Weryfikacja Pojemności (Żużla)</div>
+                <div style="display: flex; align-items: center; width: 70%; justify-content: space-around; font-family: monospace; font-size: 1.2em;">
+                    <span style="color:#64b5f6;">{mass_f:.0f} kg</span>
+                    <span style="font-weight: bold; color: #fff; padding: 0 15px;">{mass_op}</span>
+                    <span style="color:#ffb74d;">{filter_cap:.0f} kg</span>
+                    <span style="font-size: 1.5em;">{mass_icon}</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
