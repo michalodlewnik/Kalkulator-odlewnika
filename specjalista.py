@@ -90,7 +90,7 @@ with tab1:
 
     mg_sklad = zaprawy_db[wybrana]["Mg"]
     si_sklad_zap = zaprawy_db[wybrana]["Si"]
-    komponent_mg = (target_mg + 0.76 * (siarka - (0.01)) + 0.007)
+    komponent_mg = (target_mg + 0.76 * (siarka - (siarka * 0.5 )) + 0.007)
     ilosc_zaprawy = (masa * (komponent_mg / (mg_sklad * uzysk_custom)) * (temp / 1450)) * 100
 
     st.markdown("---")
